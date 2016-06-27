@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include "protocols.h"
 typedef command struct{
 	unsigned int ERA:2
 	unsigned int destar:2
