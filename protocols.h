@@ -1,4 +1,4 @@
-
+s
 typedef Command struct{
 	unsigned int ERA:2
 	unsigned int destar:2
@@ -14,3 +14,4 @@ void setWord(Word word, int number);
 void setCommand(Word word)
 Command createInstaceOfCommand(int pERA,int pdestar,int psrcar,int popcode,int pgrp);
 Command createInstaceOfCommand();
+
