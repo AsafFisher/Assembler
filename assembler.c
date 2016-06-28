@@ -2,45 +2,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "protocols.h"
-typedef command struct{
-	unsigned int ERA:2
-	unsigned int destar:2
-	unsigned int srcar:2
-	unsigned int opcode:4
-	unsigned int grp:2
-	unsigned int dumy:3
-}
-typedef word struct{
-	unsigned int cell:15
-}
+#define LINE_MAX 80
 
-enum{INSTANT_ADRESS_RESOLUTION = 0,DIRECT_ADRESS_RESOLUTION,INSTANT_ADRESS_RESOLUTION,REGISTER_DIRECT_ADRESS_RESOLUTION}
+int firstEntry(FILE* input);
+int IC;
+int DC;
 
 int main(int argc, const char * argv[]){
+	int i;
+	FILE *fi;
 	
+	for(i=1;i<argc;i++){
+		IC = 100;
+		DC = 0;
+		if(!(fi = fopen(argv[i], "r"))){
+			fprintf(stderr,"ERROR:\n");
+			continue;
+		}
+		
+		if(!firstEntry(fi)){
+			continue;
+		}
+	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	return 0;		
+		
 }
+	
+int firstEntry(FILE* input){
+	char line[LINE_MAX];
+	while(fgets(line,LINE_MAX,input)!=NULL){
+		
+		fprintf(stdout,"%s\n",line);
+			
+			
+	}
+	return 1;
+}
+	
 

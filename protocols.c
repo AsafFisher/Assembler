@@ -1,46 +1,54 @@
-include "protocols.h"
-Word createInstanceOfWord(Word word){
+#include "protocols.h"
+#define DUMMY 5
+Word createInstanceOfWordWithParam(Word word){
 	Word ref;
-	ref.cell = word.cell;
+	ref.word.cell = word.word.cell;
+	return ref;
 }
 Word createInstanceOfWord(){
 	Word ref;
-	ref.cell = 0;
+	ref.word.cell = 0;
 	return ref;
 	
 }
-Word createInstaceOfCommand(int pERA,int pdestar,int psrcar,int popcode,int pgrp){
+Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode,int pgrp){
 	Word word;
-	word.command.dumy = 101b;
+	/*101 b = 5*/
+	word.command.dumy = DUMMY;
 	word.command.ERA = pERA;
 	word.command.destar = pdestar;
 	word.command.srcar = psrcar;
 	word.command.opcode = popcode;
-	word.command.grp = pgrp
+	word.command.grp = pgrp;
 	return word;
 }
 Word createInstaceOfCommand(){
 	Word word;
-	word.command.dumy = 101b;
+	word.command.dumy = DUMMY;
+	return word;
 }
 
-Word createInstaceOfParameterAdrress(int pERA,int param1,int param2){
+Word createInstaceOfParameterAdrressWithParam(int pERA,int src,int dest){
 	Word word;
 	word.paddress.dumy = 0;
 	word.paddress.ERA = pERA;
-	word.paddress.param1 = param1;
-	word.paddress.param2 = param2;
+	word.paddress.src = src;
+	word.paddress.dest = dest;
+	return word;
 }
 Word createInstaceOfParameterAdrress(){
 	Word word;
 	word.paddress.dumy = 0;
+	return word;
 }
-Word createInstaceOfParameterValue(int pERA,int pvalue){
+Word createInstaceOfParameterValueWithParam(int pERA,int pvalue){
 	Word word;
-	word.pvalue.ERA = pERA
+	word.pvalue.ERA = pERA;
 	word.pvalue.value = pvalue;
+	return word;
 }
 Word createInstaceOfParameterValue(){
 	Word word;
-	word.pvalue = 0;
+	word.pvalue.value = 0;
+	return word;
 }
