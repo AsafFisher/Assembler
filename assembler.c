@@ -11,7 +11,7 @@ int DC;
 int main(int argc, const char * argv[]){
 	int i;
 	FILE *fi;
-	
+
 	for(i=1;i<argc;i++){
 		IC = 100;
 		DC = 0;
@@ -19,25 +19,25 @@ int main(int argc, const char * argv[]){
 			fprintf(stderr,"ERROR:\n");
 			continue;
 		}
-		
+
 		if(!firstEntry(fi)){
+			/*failed.*/
 			continue;
 		}
 	}
-	
-	return 0;		
-		
+
+	return 0;
+
 }
-	
+
 int firstEntry(FILE* input){
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
-		
+
 		fprintf(stdout,"%s\n",line);
-			
-			
+
+
+
 	}
 	return 1;
 }
-	
-

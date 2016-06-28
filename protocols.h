@@ -5,7 +5,7 @@ typedef union Word{
 	struct word{
 		unsigned int cell:15;
 	}word;
-	
+
 	/*Binary structure: |DUMY|GRP|OPCODE|SRCAR|DESTAR|ERA|*/
 	struct command{
 		unsigned int ERA:2;
@@ -21,14 +21,14 @@ typedef union Word{
 		unsigned int src:6;
 		unsigned int dest:6;
 		unsigned int dumy:1;
-		
+
 	}paddress;
 	/*Binary structure: |VALUE|ERA|*/
 	struct pvalue{
 		unsigned int ERA:2;
 		unsigned int value:13;
 	}pvalue;
-	
+
 	struct base8{
 		unsigned int block1:3;
 		unsigned int block2:3;
@@ -36,7 +36,7 @@ typedef union Word{
 		unsigned int block4:3;
 		unsigned int block5:3;
 	}base8;
-	
+
 }Word;
 
 
@@ -51,4 +51,3 @@ Word createInstaceOfParameterAdrressWithParam(int pERA,int param1,int param2);
 Word createInstaceOfParameterAdrress();
 Word createInstaceOfParameterValueWithParam(int pERA, int pvalue);
 Word createInstaceOfParameterValue();
-

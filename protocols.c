@@ -9,7 +9,7 @@ Word createInstanceOfWord(){
 	Word ref;
 	ref.word.cell = 0;
 	return ref;
-	
+
 }
 Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode,int pgrp){
 	Word word;
