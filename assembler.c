@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "protocols.h"
+#include "lineparser.h"
 #define LINE_MAX 80
 
 int firstEntry(FILE* input);
@@ -33,8 +34,8 @@ int main(int argc, const char * argv[]){
 int firstEntry(FILE* input){
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
-
-		fprintf(stdout,"%s\n",line);
+		parseLine(line);
+		/*fprintf(stdout,"%s\n",line);*/
 
 
 
