@@ -12,6 +12,7 @@ void parseLine(char* line){
   token = strtok(line, " ");
   if (token[strlen(token)-1]==':') {
     /* code */
+
     /*Remove the : from the Symbole*/
     token[strlen(token)-1] = '\0';
     symbole.name = malloc(strlen(token)+1);
@@ -19,7 +20,6 @@ void parseLine(char* line){
     printf("%s - Is a symbole.\n", symbole.name);
   }
   token = strtok(NULL, " ");
-  printf("TOK: %s\n", token );
   if (!strcmp(token, DATA)) {
     /* code */
     printf("RealTok: %s\n", token);
