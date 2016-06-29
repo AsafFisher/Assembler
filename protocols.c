@@ -22,8 +22,60 @@ Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode
 	word.command.grp = pgrp;
 	return word;
 }
-Word createInstaceOfCommand(){
+Word createInstaceOfCommand(int action){
 	Word word;
+	switch (action) {
+		case mov:
+		word.command.grp = TWOP;
+		break;
+		case cmp:
+		word.command.grp = TWOP;
+		break;
+		case add:
+		word.command.grp = TWOP;
+		break;
+		case sub:
+		word.command.grp = TWOP;
+		break;
+		case nt:
+		word.command.grp = ONEOP;
+		break;
+		case clr:
+		word.command.grp = ONEOP;
+		break;
+		case lea:
+		word.command.grp = TWOP;
+		break;
+		case inc:
+		word.command.grp = ONEOP;
+		break;
+		case dec:
+		word.command.grp = ONEOP;
+		break;
+		case jmp:
+		word.command.grp = ONEOP;
+		break;
+		case bne:
+		word.command.grp = ONEOP;
+		break;
+		case red:
+		word.command.grp = ONEOP;
+		break;
+		case prn:
+		word.command.grp = ONEOP;
+		break;
+		case jsr:
+		word.command.grp = ONEOP;
+		break;
+		case rts:
+		word.command.grp = NOP;
+		break;
+		case stop:
+		word.command.grp = NOP;
+		break;
+
+	}
+	word.command.opcode = action;
 	word.command.dumy = DUMMY;
 	return word;
 }

@@ -2,12 +2,12 @@
 
 typedef union Word{
 	/*Binary structure: 15 bits basic cell*/
-	struct word{
+	struct{
 		unsigned int cell:15;
 	}word;
 
 	/*Binary structure: |DUMY|GRP|OPCODE|SRCAR|DESTAR|ERA|*/
-	struct command{
+	struct{
 		unsigned int ERA:2;
 		unsigned int destar:2;
 		unsigned int srcar:2;
@@ -38,15 +38,21 @@ typedef union Word{
 	}base8;
 
 }Word;
+typedef struct{
+	Word *array;
+	int numberOfWords;
+	int size;
+}Words;
 
 
 enum{INSTANT_ADRESS_RESOLUTION = 0,DIRECT_ADRESS_RESOLUTION,INSTANT_DYNAMIC_ADRESS_RESOLUTION,REGISTER_DIRECT_ADRESS_RESOLUTION};
 enum{ABSULUT=0,EXTERNAL,RELOCATABLE};
-enum{mov=0,cmp,add,sub,no,clr,lea,inc,dec,jmp,bne,red,prn,jsr,rts,stop};
+enum{NOP = 0, ONEOP,TWOP};
+enum{mov=0,cmp,add,sub,nt,clr,lea,inc,dec,jmp,bne,red,prn,jsr,rts,stop};
 Word createInstanceOfWordWithParam(Word word);
 Word createInstanceOfWord();
 Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode,int pgrp);
-Word createInstaceOfCommand();
+Word createInstaceOfCommand(int action);
 Word createInstaceOfParameterAdrressWithParam(int pERA,int param1,int param2);
 Word createInstaceOfParameterAdrress();
 Word createInstaceOfParameterValueWithParam(int pERA, int pvalue);

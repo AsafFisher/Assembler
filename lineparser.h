@@ -1,14 +1,19 @@
+#include "protocols.h"
 int IC;
 int DC;
-
-void parseLine(char* line);
+int parseLine(char* line);
 
 
 typedef enum{ACTION = 0,INSTRUCTION}Type;
 typedef struct{
   char* name;
-  int address;
+  Word address;
   int isExternal;
   Type type;
 
 }Symbole;
+typedef struct{
+  Symbole* array;
+  int numberOfSymboles;
+  int size;
+}Symboles;
