@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "lineparser.h"
 char* actions[] = {"mov","cmp","add","sub","not","clr","lea","inc","dec","jmp","bne","red","prn","jsr","rts","stop"};
 #define ACTION_NUMBER 16
@@ -20,7 +21,7 @@ int parseLine(char* line){
   Symbole symbole;
   char *token;
   int hasSymbole;
-  int iaction;
+  int iaction = 0;
   int wasFound;
 
   Word word;
@@ -35,11 +36,9 @@ int parseLine(char* line){
     token[strlen(token)-1] = '\0';
     symbole.name = malloc(strlen(token)+1);
     strcpy(symbole.name,token);
+    token = strtok(NULL," \n");
   }
 
-
-
-  token = strtok(NULL, " ");
   /*-------------------Detect DATA numbers and store them + detect data Symboles-------------------------*/
   if (!strcmp(token, DATA)) {
     /* code */
@@ -78,7 +77,7 @@ int parseLine(char* line){
         return 0;
       }
     }
-    token = strtok(NULL," ");
+
     /*TODO: Built update memory.
     Problem: No way to detect ints.
     */
@@ -103,6 +102,7 @@ int parseLine(char* line){
   }
   if (!strcmp(token, ENTRY)) {
     /* TODO: NO Idea what to do.*/
+    return 1;
   }
 
   if(hasSymbole){
@@ -112,17 +112,17 @@ int parseLine(char* line){
     addSymbole(symbole);
   }
 
-  token = strtok(NULL," ");
   wasFound = false;
   while(iaction<ACTION_NUMBER){
     if(!strcmp(actions[iaction],token)){
       wasFound = true;
+      printf("%s Was found.\n", token);
     }
     iaction++;
   }
   if (!wasFound) {
     /* code */
-    printf("ERROR operator: %s Was not found!\n", token);
+    printf("ERROR operator: '%s' Was not found! \n", token);
     return 0;
   }
 
@@ -133,7 +133,6 @@ int parseLine(char* line){
     /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
     codewords.array = realloc(codewords.array, sizeof(Word)*codewords.size);
   }
-
   word = createInstaceOfCommand(iaction);
   codewords.array[IC] = word;
 
@@ -205,16 +204,31 @@ int addSymbole(Symbole symbole){
 
 int updateDataToMemory(char* token){
   /*TODO: DETECT NUMBERERS AND */
-  token = strtok(token,",");
+
+  token = strtok(token,", \n");
   while(token!=NULL){
+    long digitVal;
+    int i = 0;
+    printf("Num: %s\n",token );
+
     /*TODO:
     1. If Chars in mid mark error.
     2. Convert string to number.
     */
 
+    while (i<strlen(token)) {
+      /* code */
+      if (!(isdigit(token[i]))&&!(token[i]=='-')&&!(token[i]=='+')) {
+        /* code */
+        printf("ERROR: '%s' is invalid value!\n",token );
+        return 0;
+      }
+      i++;
+    }
+    digitVal = strtol(token, NULL,10);
 
-    printf("DATA: %s\n",token );
-    token = strtok(NULL,",");
+    printf("DATA value: %d\n",(int)digitVal );
+    token = strtok(NULL,", \n");
     DC+=1;
   }
   return 1;
