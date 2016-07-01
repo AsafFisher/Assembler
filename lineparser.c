@@ -23,9 +23,12 @@ int parseLine(char* line){
   int hasSymbole;
   int iaction = 0;
   int wasFound;
-
   Word word;
   hasSymbole = false;
+
+
+
+
 
   token = strtok(line, " ");
   if (token[strlen(token)-1]==':') {
@@ -81,7 +84,7 @@ int parseLine(char* line){
     /*TODO: Built update memory.
     Problem: No way to detect ints.
     */
-    printf("%d\n", token[11] );/*-30  -128 -99----------------------------TODO: What are these values.*/
+    token = strtok(NULL,"\t");/*-30  -128 -99----------------------------TODO: What are these values.*/
     if(!updateStringToMemory(token)){
       /*Error Saving data.*/
       return 0;
@@ -125,13 +128,9 @@ int parseLine(char* line){
     printf("ERROR operator: '%s' Was not found! \n", token);
     return 0;
   }
-
-  if (codewords.size<=codewords.numberOfWords) {
-    /* code */
-    printf("> RESIZE WORDS ARRAY!\n");
-    codewords.size += 10;
-    /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
-    codewords.array = realloc(codewords.array, sizeof(Word)*codewords.size);
+  if (!checkSize(&codewords)) {
+    /* ERROR ALLOCATING SPACE! */
+    return 0;
   }
   word = createInstaceOfCommand(iaction);
   codewords.array[IC] = word;
@@ -204,12 +203,12 @@ int addSymbole(Symbole symbole){
 
 int updateDataToMemory(char* token){
   /*TODO: DETECT NUMBERERS AND */
-
+Word value;
   token = strtok(token,", \n");
   while(token!=NULL){
     long digitVal;
     int i = 0;
-    printf("Num: %s\n",token );
+    printf("DATA char: %s\n",token );
 
     /*TODO:
     1. If Chars in mid mark error.
@@ -225,30 +224,56 @@ int updateDataToMemory(char* token){
       }
       i++;
     }
+    /*Get int value of the token!*/
     digitVal = strtol(token, NULL,10);
+    if (!checkSize(&datawords)) {
+      /* ERROR ALLOCATING SPACE! */
 
+      return 0;
+    }
     printf("DATA value: %d\n",(int)digitVal );
+    if(!setWordValue(&value,digitVal)){
+      /*ERROR VALUE TOO BIG*/
+      return 0;
+    }
+    datawords.array[DC] = value;
+    printf("The value %d was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,DC );
     token = strtok(NULL,", \n");
-    DC+=1;
+    DC++;
   }
   return 1;
 }
 int updateStringToMemory(char* token){
     /*TODO:If no "" mark
     PROBLEM: Cant detect char -> ""
-
+    Check each letter untill you get to "
     */
-    printf("%c\n",token[1] );
-    if(token[0]!='"'){
-      printf("ERROR missing first -> Cytation <-\n");
+    /*index of start of string*/
+    int i = 1;
+    if(token[0]!='\"'){
+      printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-    if(token[strlen(token)-1]!='"'){
+    printf("TOL:%c\n",token[strlen(token)-2] );
+    if(token[strlen(token)-2]!='\"'){
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
 
-    printf("STRING: %s\n",token );
-    token = strtok(NULL,",");
+    while (i<strlen(token)-2) {
+      /* code */
+      Word word;
+      printf("Char: %c\n",token[i] );
+      if(!setWordValue(&word,token[i])){
+        /*ERROR VALUE TOO BIG*/
+        return 0;
+      }
+      datawords.array[DC] = word;
+printf("The value %d was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,DC );
+      i++;
+      DC++;
+    }
+
+
     return 1;
 }

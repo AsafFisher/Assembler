@@ -1,4 +1,7 @@
 #include "protocols.h"
+#include "math.h"
+#include <stdio.h>
+#include <stdlib.h>
 #define DUMMY 5
 Word createInstanceOfWordWithParam(Word word){
 	Word ref;
@@ -103,4 +106,32 @@ Word createInstaceOfParameterValue(){
 	Word word;
 	word.pvalue.value = 0;
 	return word;
+}
+
+int setWordValue(Word *word, int value){
+	if(value>(pow(2,15)-1)){
+		printf("Value:'%d'is too big.\n",(int)word->word.cell );
+		return 0;
+	}
+	word->word.cell = value;
+	return 1;
+}
+
+int checkSize(Words *words){
+	printf("TESTWORKS" );
+	if (words->size<=words->numberOfWords) {
+    /* code */
+
+    words->size += 10;
+    /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
+    if ((words->array = realloc(words->array, sizeof(Word)*words->size))==NULL) {
+      /* code */
+      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+			return 0;
+    }
+    printf(">   ARRAY RESIZED!\n");
+		return 1;
+  }
+	return 1;
+
 }

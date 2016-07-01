@@ -1,5 +1,8 @@
 #include "protocols.h"
+/*Instruction counter*/
 int IC;
+
+/*Data counter*/
 int DC;
 int parseLine(char* line);
 

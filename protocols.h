@@ -57,3 +57,5 @@ Word createInstaceOfParameterAdrressWithParam(int pERA,int param1,int param2);
 Word createInstaceOfParameterAdrress();
 Word createInstaceOfParameterValueWithParam(int pERA, int pvalue);
 Word createInstaceOfParameterValue();
+int setWordValue(Word *word, int value);
+int checkSize(Words *words);
