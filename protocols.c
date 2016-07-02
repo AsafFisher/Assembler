@@ -1,5 +1,4 @@
 #include "protocols.h"
-#include "math.h"
 #include <stdio.h>
 #include <stdlib.h>
 #define DUMMY 5
@@ -109,7 +108,8 @@ Word createInstaceOfParameterValue(){
 }
 
 int setWordValue(Word *word, int value){
-	if(value>(pow(2,15)-1)){
+	printf("TESTWORKS");
+	if(value>((1<<16) - 1)){
 		printf("Value:'%d'is too big.\n",(int)word->word.cell );
 		return 0;
 	}
@@ -118,7 +118,6 @@ int setWordValue(Word *word, int value){
 }
 
 int checkSize(Words *words){
-	printf("TESTWORKS" );
 	if (words->size<=words->numberOfWords) {
     /* code */
 

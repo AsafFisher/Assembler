@@ -3,6 +3,6 @@ runfile:	assembler.o protocols.o lineparser.o
 assembler.o:	assembler.c
 	gcc	-c	-ansi	-Wall	-pedantic	assembler.c -o assembler.o
 protocols.o:	protocols.c
-	gcc	-c	-ansi	-Wall	-pedantic	protocols.c -o protocols.o	-lm
+	gcc	-c	-ansi	-Wall	-pedantic	protocols.c -o protocols.o
 lineparser.o:	lineparser.c
 	gcc	-c	-ansi	-Wall	-pedantic	lineparser.c -o lineparser.o

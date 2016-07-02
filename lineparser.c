@@ -249,26 +249,38 @@ int updateStringToMemory(char* token){
     Check each letter untill you get to "
     */
     /*index of start of string*/
-    int i = 1;
+    int i;
+    int lindex;
+    int foundlast = 0;
     if(token[0]!='\"'){
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-    printf("TOL:%c\n",token[strlen(token)-2] );
-    if(token[strlen(token)-2]!='\"'){
+    lindex = 1;
+    while (lindex<(strlen(token)-1)) {
+      if (token[lindex]=='\"') {
+        /*Find last quotes*/
+        foundlast = 1;
+        break;
+      }
+      lindex++;
+    }
+    if (!foundlast) {
+      /*ERROR last quote not found!*/
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-
-    while (i<strlen(token)-2) {
-      /* code */
-      Word word;
+    printf("TOL:%c\n",token[lindex] );
+    i = 1;
+    while (i<lindex) {
+      /* ERROR SAGMENT FAULT */
+      Word *word;
       printf("Char: %c\n",token[i] );
-      if(!setWordValue(&word,token[i])){
+      if(!setWordValue(word,(int)token[i])){
         /*ERROR VALUE TOO BIG*/
         return 0;
       }
-      datawords.array[DC] = word;
+      datawords.array[DC] = *word;
 printf("The value %d was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,DC );
       i++;
       DC++;
