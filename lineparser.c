@@ -269,7 +269,6 @@ int updateStringToMemory(char* token){
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-    printf("TOL:%c\n",token[lindex] );
     i = 1;
     while (i<lindex) {
       /* ~ERROR SAGMENT FAULT~ Fixed */
