@@ -275,7 +275,7 @@ int updateStringToMemory(char* token){
       Word val;
       if (!checkSize(&datawords)) {
         /* ERROR ALLOCATING SPACE! */
-
+ 
         return 0;
       }
       if(!setWordValue(&val,token[i])){
