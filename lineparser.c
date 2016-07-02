@@ -208,7 +208,6 @@ Word value;
   while(token!=NULL){
     long digitVal;
     int i = 0;
-    printf("DATA char: %s\n",token );
 
     /*TODO:
     1. If Chars in mid mark error.
@@ -273,15 +272,19 @@ int updateStringToMemory(char* token){
     printf("TOL:%c\n",token[lindex] );
     i = 1;
     while (i<lindex) {
-      /* ERROR SAGMENT FAULT */
-      Word *word;
-      printf("Char: %c\n",token[i] );
-      if(!setWordValue(word,(int)token[i])){
+      /* ~ERROR SAGMENT FAULT~ Fixed */
+      Word val;
+      if (!checkSize(&datawords)) {
+        /* ERROR ALLOCATING SPACE! */
+
+        return 0;
+      }
+      if(!setWordValue(&val,token[i])){
         /*ERROR VALUE TOO BIG*/
         return 0;
       }
-      datawords.array[DC] = *word;
-printf("The value %d was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,DC );
+      datawords.array[DC] = val;
+printf("The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,datawords.array[DC].word.cell,DC );
       i++;
       DC++;
     }
