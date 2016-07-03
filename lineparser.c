@@ -17,6 +17,7 @@ Symboles symboles;
 int addSymbole(Symbole symbole);
 int updateDataToMemory(char* token);
 int updateStringToMemory(char* token);
+int updateCommandParamToMemory(Word command, char* token);
 int parseLine(char* line){
   Symbole symbole;
   char *token;
@@ -84,7 +85,7 @@ int parseLine(char* line){
     /*TODO: Built update memory.
     Problem: No way to detect ints.
     */
-    token = strtok(NULL,"\t");/*-30  -128 -99----------------------------TODO: What are these values.*/
+    token = strtok(NULL,"\t");
     if(!updateStringToMemory(token)){
       /*Error Saving data.*/
       return 0;
@@ -136,8 +137,25 @@ int parseLine(char* line){
   codewords.array[IC] = word;
 
 /*FINISHED HERE! NEXT TIME FINISH FIRST WALKTHROUGH AND SECOND.*/
-
-
+/*Check if parameter exist.*/
+/*
+  {
+    char* temp = strtok(NULL,"\t");
+    if (strcmp(temp,actions[iaction])==0&&word.command.grp!=NOP) {
+      ERROR NO PARAMETERS
+      printf("ERROR NO PARAMETER!\n");
+      *token =NULL;
+    }
+    token = temp;
+  }
+  if (*token == NULL) {
+    return 0;
+  }
+  if(!updateCommandParamToMemory(word,token)){
+    ERROR: invalid parameter
+    return 0;
+  }
+  */
 
 
 
@@ -200,10 +218,8 @@ int addSymbole(Symbole symbole){
   symboles.numberOfSymboles++;
   return 1;
 }
-
 int updateDataToMemory(char* token){
-  /*TODO: DETECT NUMBERERS AND */
-Word value;
+  Word value;
   token = strtok(token,", \n");
   while(token!=NULL){
     long digitVal;
@@ -248,34 +264,52 @@ int updateStringToMemory(char* token){
     Check each letter untill you get to "
     */
     /*index of start of string*/
-    int i;
+    int i = 0;
     int lindex;
-    int foundlast = 0;
+    int found = 0;
+    printf("TEST: %s\n",token );
+    /*
     if(token[0]!='\"'){
-      printf("ERROR missing last -> Cytation <-\n");
+      printf("ERROR missing first -> Cytation <-\n");
+      return 0;
+    }*/
+    while (i<(strlen(token)-1)) {
+      if (token[i]=='\"') {
+        /*Find last quotes*/
+        found = 1;
+        break;
+      }
+      i++;
+    }
+    if (!found) {
+      /*ERROR last quote not found!*/
+      printf("ERROR missing first -> Cytation <-\n");
       return 0;
     }
-    lindex = 1;
+
+    found = 0;
+    i++;
+    lindex = i;
     while (lindex<(strlen(token)-1)) {
       if (token[lindex]=='\"') {
         /*Find last quotes*/
-        foundlast = 1;
+        found = 1;
         break;
       }
       lindex++;
     }
-    if (!foundlast) {
+    if (!found) {
       /*ERROR last quote not found!*/
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-    i = 1;
+printf("i: %d lind: %d\n",i,lindex );
     while (i<lindex) {
       /* ~ERROR SAGMENT FAULT~ Fixed */
       Word val;
       if (!checkSize(&datawords)) {
         /* ERROR ALLOCATING SPACE! */
- 
+
         return 0;
       }
       if(!setWordValue(&val,token[i])){
@@ -283,11 +317,70 @@ int updateStringToMemory(char* token){
         return 0;
       }
       datawords.array[DC] = val;
-printf("The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,datawords.array[DC].word.cell,DC );
+      printf("The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,datawords.array[DC].word.cell,DC );
       i++;
       DC++;
     }
 
 
     return 1;
+}
+int updateCommandParamToMemory(Word command,char* token){
+  int error = 0;
+  switch (command.command.grp) {
+    case NOP:
+    {
+      int i = 0;
+      while (i<strlen(token)) {
+        if (token[i]==' '||token[i]=='\0'||token[i]=='\t') {
+          /* code */
+        }
+        error = 1;
+      }
+    }
+    if (error) {
+      /* code */
+      printf("Invalid Token, no parameter required: '%s'\n",token);
+      return 0;
+    }
+    return 1;
+    case ONEOP:
+    {
+      int i = 0;
+      while (i<strlen(token)) {
+        if (token[i]==',') {
+          /* ERROR TOO MANY PARAMS */
+          printf("ERROR: \"%s\" is an iligal parameter for this type of command.\n",token );
+          error = 1;
+        }
+      }
+    }
+    if (error) {
+      return 0;
+    }
+    token = strtok(NULL," \t");
+
+    return 1;
+    case TWOP:
+    {
+      int found = 0;
+      int i = 0;
+      while (i<strlen(token)) {
+        if(token[i]==','){
+          found = 1;
+        }
+      }
+      if (!found) {
+        printf("Missing parameter: %s\n",token );
+        error = 1;
+      }
+    }
+    if (error) {
+      return 0;
+    }
+
+
+    return 1;
+  }
+  return 0;
 }

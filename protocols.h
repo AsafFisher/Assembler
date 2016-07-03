@@ -44,10 +44,13 @@ typedef struct{
 	int size;
 }Words;
 
-
+/*Address resolution*/
 enum{INSTANT_ADRESS_RESOLUTION = 0,DIRECT_ADRESS_RESOLUTION,INSTANT_DYNAMIC_ADRESS_RESOLUTION,REGISTER_DIRECT_ADRESS_RESOLUTION};
+/*ERA type.*/
 enum{ABSULUT=0,EXTERNAL,RELOCATABLE};
+/*Group*/
 enum{NOP = 0, ONEOP,TWOP};
+/*Action opcode*/
 enum{mov=0,cmp,add,sub,nt,clr,lea,inc,dec,jmp,bne,red,prn,jsr,rts,stop};
 Word createInstanceOfWordWithParam(Word word);
 Word createInstanceOfWord();
