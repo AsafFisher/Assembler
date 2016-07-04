@@ -22,7 +22,7 @@ int parseLine(char* line){
   Symbole symbole;
   char *token;
   int hasSymbole;
-  int iaction = 0;
+  int actionID = 0;
   int wasFound;
   Word word;
   hasSymbole = false;
@@ -31,7 +31,7 @@ int parseLine(char* line){
 
 
 
-  token = strtok(line, " ");
+  token = strtok(line, " \n");
   if (token[strlen(token)-1]==':') {
     /* code */
 
@@ -117,45 +117,49 @@ int parseLine(char* line){
   }
 
   wasFound = false;
-  while(iaction<ACTION_NUMBER){
-    if(!strcmp(actions[iaction],token)){
-      wasFound = true;
-      printf("%s Was found.\n", token);
+  {
+    int iaction = 0;
+    while(iaction<ACTION_NUMBER){
+      if(!strcmp(actions[iaction],token)){
+        wasFound = true;
+        actionID = iaction;
+        printf("%s Was found.\n", token);
+        break;
+      }
+      iaction++;
     }
-    iaction++;
   }
   if (!wasFound) {
     /* code */
     printf("ERROR operator: '%s' Was not found! \n", token);
     return 0;
   }
+
   if (!checkSize(&codewords)) {
     /* ERROR ALLOCATING SPACE! */
     return 0;
   }
-  word = createInstaceOfCommand(iaction);
+  word = createInstaceOfCommand(actionID);
   codewords.array[IC] = word;
-
 /*FINISHED HERE! NEXT TIME FINISH FIRST WALKTHROUGH AND SECOND.*/
 /*Check if parameter exist.*/
-/*
+
   {
     char* temp = strtok(NULL,"\t");
-    if (strcmp(temp,actions[iaction])==0&&word.command.grp!=NOP) {
-      ERROR NO PARAMETERS
+    if (temp==NULL&&word.command.grp!=NOP) {
+      /*ERROR NO PARAMETERS*/
       printf("ERROR NO PARAMETER!\n");
-      *token =NULL;
+      token =NULL;
     }
     token = temp;
   }
-  if (*token == NULL) {
+  if (token == NULL) {
     return 0;
   }
   if(!updateCommandParamToMemory(word,token)){
-    ERROR: invalid parameter
+    /*ERROR: invalid parameter*/
     return 0;
   }
-  */
 
 
 
@@ -303,7 +307,6 @@ int updateStringToMemory(char* token){
       printf("ERROR missing last -> Cytation <-\n");
       return 0;
     }
-printf("i: %d lind: %d\n",i,lindex );
     while (i<lindex) {
       /* ~ERROR SAGMENT FAULT~ Fixed */
       Word val;
@@ -322,7 +325,6 @@ printf("i: %d lind: %d\n",i,lindex );
       DC++;
     }
 
-
     return 1;
 }
 int updateCommandParamToMemory(Word command,char* token){
@@ -334,8 +336,10 @@ int updateCommandParamToMemory(Word command,char* token){
       while (i<strlen(token)) {
         if (token[i]==' '||token[i]=='\0'||token[i]=='\t') {
           /* code */
+          i++;
         }
         error = 1;
+        break;
       }
     }
     if (error) {
@@ -352,7 +356,9 @@ int updateCommandParamToMemory(Word command,char* token){
           /* ERROR TOO MANY PARAMS */
           printf("ERROR: \"%s\" is an iligal parameter for this type of command.\n",token );
           error = 1;
+          break;
         }
+        i++;
       }
     }
     if (error) {
@@ -368,7 +374,9 @@ int updateCommandParamToMemory(Word command,char* token){
       while (i<strlen(token)) {
         if(token[i]==','){
           found = 1;
+          break;
         }
+        i++;
       }
       if (!found) {
         printf("Missing parameter: %s\n",token );
