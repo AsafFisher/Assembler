@@ -347,6 +347,9 @@ int updateCommandParamToMemory(Word command,char* token){
       printf("Invalid Token, no parameter required: '%s'\n",token);
       return 0;
     }
+
+
+
     return 1;
     case ONEOP:
     {
@@ -364,8 +367,7 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
-    token = strtok(NULL," \t");
-
+    printf("PARAMS: %s\n",token);
     return 1;
     case TWOP:
     {
@@ -386,6 +388,15 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
+    printf("PARAMS: %s\n",token);
+
+
+
+
+
+
+
+
 
 
     return 1;
