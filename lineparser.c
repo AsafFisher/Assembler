@@ -1,5 +1,4 @@
 
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -18,6 +17,8 @@ int addSymbole(Symbole symbole);
 int updateDataToMemory(char* token);
 int updateStringToMemory(char* token);
 int updateCommandParamToMemory(Word command, char* token);
+int evaluateTwoParamSize(Word *command,char* token);
+int evaluateOneParamSize(Word *command,char* token);
 int parseLine(char* line){
   Symbole symbole;
   char *token;
@@ -118,7 +119,10 @@ int parseLine(char* line){
 
   wasFound = false;
   {
-    int iaction = 0;
+    int iaction =while (/* condition */) {
+      /* code */
+    }
+    strcmp() 0;
     while(iaction<ACTION_NUMBER){
       if(!strcmp(actions[iaction],token)){
         wasFound = true;
@@ -140,12 +144,14 @@ int parseLine(char* line){
     return 0;
   }
   word = createInstaceOfCommand(actionID);
-  codewords.array[IC] = word;
+  /*codewords.array[IC] = word;*/
+
+
 /*FINISHED HERE! NEXT TIME FINISH FIRST WALKTHROUGH AND SECOND.*/
 /*Check if parameter exist.*/
 
   {
-    char* temp = strtok(NULL,"\t");
+    char* temp = strtok(NULL,"\n\t");
     if (temp==NULL&&word.command.grp!=NOP) {
       /*ERROR NO PARAMETERS*/
       printf("ERROR NO PARAMETER!\n");
@@ -157,7 +163,7 @@ int parseLine(char* line){
     return 0;
   }
   if(!updateCommandParamToMemory(word,token)){
-    /*ERROR: invalid parameter*/
+      /*ERROR: invalid parameter*/
     return 0;
   }
 
@@ -328,6 +334,7 @@ int updateStringToMemory(char* token){
     return 1;
 }
 int updateCommandParamToMemory(Word command,char* token){
+  int paramSize = 0;
   int error = 0;
   switch (command.command.grp) {
     case NOP:
@@ -348,8 +355,6 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
 
-
-
     return 1;
     case ONEOP:
     {
@@ -367,7 +372,14 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
-    printf("PARAMS: %s\n",token);
+    /*check memory allocation*/
+    paramSize = evaluateOneParamSize(&word,token);
+    codewords.array[IC] = word;
+    IC+=(paramSize+1);
+
+
+
+    printf("PARAMS: '%s'\n",token);
     return 1;
     case TWOP:
     {
@@ -388,8 +400,11 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
-    printf("PARAMS: %s\n",token);
+    printf("PARAMS: '%s'\n",token);
 
+    paramSize = setUpCommandParams(&word,token);
+    codewords.array[IC] = word;
+    IC+=(paramSize+1);
 
 
 
@@ -402,4 +417,20 @@ int updateCommandParamToMemory(Word command,char* token){
     return 1;
   }
   return 0;
+}
+int evaluateTwoParamSize(Word *command, char* token){
+
+}
+int evaluateOneParamSize(Word *command,char* token){
+  int i = 0;
+  int isRegister = false;
+  while (i < REGISTERS_NUMER) {
+    if (!strcmp(registers[i],token)) {
+      command.srcar
+      return 1;
+    }
+    if()
+
+  }
+
 }
