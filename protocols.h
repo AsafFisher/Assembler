@@ -45,7 +45,7 @@ typedef struct{
 }Words;
 
 /*Address resolution*/
-enum{INSTANT_ADRESS_RESOLUTION = 0,DIRECT_ADRESS_RESOLUTION, INSTANT_DYNAMIC_ADRESS_RESOLUTION, REGISTER_DIRECT_ADRESS_RESOLUTION};
+enum{INSTANT_ADDRESS_RESOLUTION = 0,DIRECT_ADDRESS_RESOLUTION, INSTANT_DYNAMIC_ADDRESS_RESOLUTION, DIRECT_REGISTER_ADDRESS_RESOLUTION};
 /*ERA type.*/
 enum{ABSULUT=0,EXTERNAL,RELOCATABLE};
 /*Group*/
@@ -62,4 +62,3 @@ Word createInstaceOfParameterValueWithParam(int pERA, int pvalue);
 Word createInstaceOfParameterValue();
 int setWordValue(Word *word, int value);
 int checkSize(Words *words);
-int setUpCommandParams(&word,token);

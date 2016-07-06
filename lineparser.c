@@ -4,7 +4,9 @@
 #include <ctype.h>
 #include "lineparser.h"
 char* actions[] = {"mov","cmp","add","sub","not","clr","lea","inc","dec","jmp","bne","red","prn","jsr","rts","stop"};
+char* registers[] = {"‫‪r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 #define ACTION_NUMBER 16
+#define REGISTERS_NUMER 8
 #define DATA ".data"
 #define STRING ".string"
 #define EXTERN ".extern"
@@ -19,6 +21,13 @@ int updateStringToMemory(char* token);
 int updateCommandParamToMemory(Word command, char* token);
 int evaluateTwoParamSize(Word *command,char* token);
 int evaluateOneParamSize(Word *command,char* token);
+int setUpCommandParams(Word *word,char* token);
+
+
+
+
+
+
 int parseLine(char* line){
   Symbole symbole;
   char *token;
@@ -372,10 +381,15 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
-    /*check memory allocation*/
-    paramSize = evaluateOneParamSize(&word,token);
+    if (!checkSize(&codewords)) {
+      /* ERROR ALLOCATING SPACE! */
+
+      return 0;
+    }
     codewords.array[IC] = word;
-    IC+=(paramSize+1);
+    IC++;
+    paramSize = setUpCommandParams(&codewords.array[IC],token);
+    IC+=paramSize;
 
 
 
@@ -401,10 +415,15 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
     printf("PARAMS: '%s'\n",token);
+    if (!checkSize(&codewords)) {
+      /* ERROR ALLOCATING SPACE! */
 
-    paramSize = setUpCommandParams(&word,token);
+      return 0;
+    }
     codewords.array[IC] = word;
-    IC+=(paramSize+1);
+    IC++;
+    paramSize = setUpCommandParams(&codewords.array[IC],token);
+    IC+=paramSize;
 
 
 
@@ -418,19 +437,93 @@ int updateCommandParamToMemory(Word command,char* token){
   }
   return 0;
 }
-int evaluateTwoParamSize(Word *command, char* token){
 
+int setUpCommandParams(Word* command,char *token){
+  int allocSize = 0;
+  Word p1;
+  Word p2;
+
+  /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
+
+
+	switch (command.command.opcode) {
+		case cmp:
+
+    /*FIRST PARAM:   -------------------------*/
+    if(!checkSrcParam(command,token)){
+      /*ERROR*/
+      return 0;
+    }
+
+    /*-----------------------------------------------------*/
+
+
+		break;
+		case move:
+		case add:
+		case sub:
+
+		break;
+		case nt:
+		case clr:
+		case inc:
+		case dec:
+		case jmp:
+		case bne:
+		case red:
+		case jsr
+		break;
+		case prn:
+		break;
+		case lea:
+		break;
+    default:
+    return 0;
+
+	}
 }
-int evaluateOneParamSize(Word *command,char* token){
+
+int checkSrcParam(Word *command,char* token){
+  char *temp = token;
+  Word arg;
   int i = 0;
-  int isRegister = false;
+  int structureIndex = 0;
+  char idarStructure[] = {'[','-',']'};
+  const int NUMBEROFSTRUCTURE 3;
+  if (token = strtok(NULL," ,")==NULL) {
+    printf("> ERROR '%s' bad token.\n",temp );
+    return 0;
+  }
+  /*Check if first parameter is a register...*/
+  if(token[0] == '#'){
+    command->command.stcar = INSTANT_ADDRESS_RESOLUTION;
+    arg.pvalue.value = strtol(token,NULL, 10);
+    codewords.array[IC] = arg;
+    IC++;
+    return 1;
+  }
   while (i < REGISTERS_NUMER) {
     if (!strcmp(registers[i],token)) {
-      command.srcar
+      command->command.srcar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
+      arg.paddress.src = i;
+      codewords.array[IC] = arg;
+      IC++;
       return 1;
     }
-    if()
-
   }
-
+  i = 0;
+  while (i<strlen(token)&&structureIndex<NUMBEROFSTRUCTURE) {
+    if (token[i]==idarStructure[structureIndex]) {
+      /* code */
+      structureIndex++;
+    }
+    i++;
+  }
+  if (structureIndex==NUMBEROFSTRUCTURE) {
+    command->command.srcar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
+    IC++;
+    return 1;
+  }
+  command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+  return 1;
 }

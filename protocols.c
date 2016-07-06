@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define DUMMY 5
-#define REGISTERS_NUMER 8
-char* registers[] = {"‫‪r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 Word createInstanceOfWordWithParam(Word word){
 	Word ref;
 	ref.word.cell = word.word.cell;
@@ -135,39 +133,4 @@ int checkSize(Words *words){
   }
 	return 1;
 
-}
-int setUpCommandParams(Word* word,char *token){
-	char *temp = token;
-	switch (word.command.opcode) {
-		case cmp:
-		if (token = strtok(NULL," ,")==NULL) {
-			printf("> ERROR '%s' bad token.\n",temp );
-		}
-/*TODO: Comtinue...-----------------------------------*/
-		while (i < REGISTERS_NUMER) {
-	    if (!strcmp(registers[i],token)) {
-				word.command.srcar =
-	      return 1;
-	    }
-		break;
-		case move:
-		case add:
-		case sub:
-
-		break;
-		case nt:
-		case clr:
-		case inc:
-		case dec:
-		case jmp:
-		case bne:
-		case red:
-		case jsr
-		break;
-		case prn:
-		break;
-		case lea:
-		break;
-
-	}
 }
