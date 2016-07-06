@@ -76,7 +76,7 @@ Word createInstaceOfCommand(int action){
 		word.command.grp = NOP;
 		break;
 
-	}ommand.srcar
+	}
 	word.command.opcode = action;
 	word.command.dumy = DUMMY;
 	return word;
@@ -125,10 +125,10 @@ int checkSize(Words *words){
     /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
     if ((words->array = realloc(words->array, sizeof(Word)*words->size))==NULL) {
       /* code */
-      printf("> ERROR NOT ENOGH SPACE!!!\n");
+      printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
     }
-    printf("> ARRAY RESIZED!\n");
+    printf(">   ARRAY RESIZED!\n");
 		return 1;
   }
 	return 1;
