@@ -420,6 +420,7 @@ int updateCommandParamToMemory(Word command,char* token){
     }
     codewords.array[IC] = command;
     IC++;
+
     paramSize = setUpCommandParams(&codewords.array[IC-1],token);
     IC+=paramSize;
 
@@ -438,12 +439,14 @@ int updateCommandParamToMemory(Word command,char* token){
 
 int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
-
-  printf("> DEBAG: '%u'\n",command->command.opcode);
 	switch (command->command.opcode) {
 		case cmp:
 
-    /*FIRST PARAM:   -------------------------*/
+    /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
+    if ((token = strtok(NULL,","))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      return 0;
+    }
     if(!checkSrcParam(command,token)){
       /*ERROR*/
       return 0;
@@ -482,22 +485,21 @@ int setUpCommandParams(Word* command,char *token){
 }
 
 int checkSrcParam(Word *command,char* token){
-  char *temp = token;
+
   Word arg;
   int i = 0;
   int structureIndex = 0;
   char idarStructure[] = {'[','-',']'};
   int const NUMBEROFSTRUCTURE = 3;
-  if ((token = strtok(NULL," ,"))==NULL) {
-    printf("> ERROR '%s' bad token.\n",temp );
-    return 0;
-  }
+
+  printf("Token: '%s'\n",token );
   /*Check if first parameter is a register...*/
   if(token[0] == '#'){
     command->command.srcar = INSTANT_ADDRESS_RESOLUTION;
     arg.pvalue.value = strtol(token,NULL, 10);
     codewords.array[IC] = arg;
     IC++;
+    printf("Argument: '%u' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[IC-2].command.opcode,codewords.array[IC-2].command.srcar );
     return 1;
   }
   while (i < REGISTERS_NUMER) {
