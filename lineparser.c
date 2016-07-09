@@ -443,7 +443,7 @@ int setUpCommandParams(Word* command,char *token){
 		case cmp:
 
     /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
-    if ((token = strtok(NULL,","))==NULL) {
+    if ((token = strtok(token,","))==NULL) {
       printf("> ERROR: '%s'\n",token );
       return 0;
     }
