@@ -48,7 +48,14 @@ int parseLine(char* line){
   Word word;
   hasSymbole = false;
 
-
+  if (!checkSize(&codewords)) {
+    /* ERROR ALLOCATING SPACE! */
+    return 0;
+  }
+  if (!checkSize(&datawords)) {
+    /* ERROR ALLOCATING SPACE! */
+    return 0;
+  }
 
 
 
@@ -395,14 +402,14 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
     codewords.array[IC] = command;
+    word = &codewords.array[IC];
     IC++;
     if(!setUpCommandParams(&codewords.array[IC-1],token)){
       printf("> DEBAG ERROR!!!\n");
       return 0;
     }
+    printf("COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
 
-
-    printf("PARAMS: '%s'\n",token);
     return 1;
     case TWOP:
     {
@@ -455,6 +462,7 @@ int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
   Word arg;
   int ERROR = 0;
+
 	switch (command->command.opcode) {
 		case cmp:
 
@@ -481,7 +489,7 @@ int setUpCommandParams(Word* command,char *token){
       IC++;
     }
     /*--------------------------DESTINATION---------------------------*/
-    if ((token = strtok(NULL,"\t\n"))==NULL) {
+    if ((token = strtok(NULL," \t\n"))==NULL) {
       printf("> ERROR: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
@@ -586,6 +594,8 @@ int setUpCommandParams(Word* command,char *token){
       codewords.array[IC] = arg;
       IC++;
     }
+    command->command.srcar = 0;
+
 
 		return !ERROR;
 		case prn:
@@ -612,7 +622,7 @@ int setUpCommandParams(Word* command,char *token){
       codewords.array[IC] = arg;
       IC++;
     }
-
+    command->command.srcar = 0;
     return !ERROR;
 		case lea:
     /*FIRST PARAM:   -------------------------*/
@@ -689,6 +699,7 @@ int isParamIAR(Word *command,char* token,int location){
 int isParamDRAR(Word *command,char* token,int location){
   Word arg;
   int i = 0;
+
   while (i < REGISTERS_NUMER) {
     if (!strcmp(registers[i],token)) {
       if(location == SOURCE){
@@ -699,7 +710,6 @@ int isParamDRAR(Word *command,char* token,int location){
       }
       if(location == DESTINATION){
         if ((command->command.grp == TWOP)&&(command->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
-          printf("> DEBAG 701 TWO REGS\n");
           codewords.array[IC-1].paddress.dest = i;
         }else{
           arg.paddress.src = i;
