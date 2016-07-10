@@ -18,15 +18,15 @@ typedef union Word{
 	/*Binary structure: |DUMY|PARAM2|PARAM1|ERA|*/
 	struct paddress{
 		unsigned int ERA:2;
-		unsigned int src:6;
-		unsigned int dest:6;
+		int src:6;
+		int dest:6;
 		unsigned int dumy:1;
 
 	}paddress;
 	/*Binary structure: |VALUE|ERA|*/
 	struct pvalue{
 		unsigned int ERA:2;
-		unsigned int value:13;
+		signed int value:13;
 	}pvalue;
 
 	struct base8{
@@ -45,7 +45,7 @@ typedef struct{
 }Words;
 
 /*Address resolution*/
-enum{INSTANT_ADDRESS_RESOLUTION = 0,DIRECT_ADDRESS_RESOLUTION, INSTANT_DYNAMIC_ADDRESS_RESOLUTION, DIRECT_REGISTER_ADDRESS_RESOLUTION};
+enum{INSTANT_ADDRESS_RESOLUTION = 0,DIRECT_ADDRESS_RESOLUTION, INSTANT_DYNAMIC_ADDRESS_RESOLUTION, DIRECT_REGISTER_ADDRESS_RESOLUTION, NONE = -1};
 /*ERA type.*/
 enum{ABSULUT=0,EXTERNAL,RELOCATABLE};
 /*Group*/

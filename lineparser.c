@@ -4,9 +4,11 @@
 #include <ctype.h>
 #include "lineparser.h"
 char* actions[] = {"mov","cmp","add","sub","not","clr","lea","inc","dec","jmp","bne","red","prn","jsr","rts","stop"};
-char* registers[] = {"‫‪r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
+char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 #define ACTION_NUMBER 16
 #define REGISTERS_NUMER 8
+#define SOURCE 0
+#define DESTINATION 1
 #define DATA ".data"
 #define STRING ".string"
 #define EXTERN ".extern"
@@ -23,6 +25,14 @@ int evaluateTwoParamSize(Word *command,char* token);
 int evaluateOneParamSize(Word *command,char* token);
 int setUpCommandParams(Word *word,char* token);
 int checkSrcParam(Word *command,char* token);
+/*Check if param is INSTANT_ADDRESS_RESOLUTION, create a Word and save space in memory.
+* location is the type of the assignment (SOURCE OR DESTINATION).
+*/
+int isParamIAR(Word *command,char* token, int location);
+/*Check if param is DIRECT_REGISTER_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
+int isParamDRAR(Word *command,char* token, int location);
+/*Check if param is INSTANT_DYNAMIC_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
+int isParamIDAR(Word *command,char* token, int location);
 
 
 
@@ -341,7 +351,7 @@ int updateStringToMemory(char* token){
     return 1;
 }
 int updateCommandParamToMemory(Word command,char* token){
-  int paramSize = 0;
+  Word *word;/*remove!*/
   int error = 0;
   switch (command.command.grp) {
     case NOP:
@@ -386,9 +396,10 @@ int updateCommandParamToMemory(Word command,char* token){
     }
     codewords.array[IC] = command;
     IC++;
-    paramSize = setUpCommandParams(&codewords.array[IC-1],token);
-    IC+=paramSize;
-
+    if(!setUpCommandParams(&codewords.array[IC-1],token)){
+      printf("> DEBAG ERROR!!!\n");
+      return 0;
+    }
 
 
     printf("PARAMS: '%s'\n",token);
@@ -419,10 +430,13 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
     codewords.array[IC] = command;
+    word = &codewords.array[IC];
     IC++;
-
-    paramSize = setUpCommandParams(&codewords.array[IC-1],token);
-    IC+=paramSize;
+    if(!setUpCommandParams(&codewords.array[IC-1],token)){
+      printf("> DEBAG ERROR!!!\n");
+      return 0;
+    }
+    printf("COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
 
 
 
@@ -439,28 +453,108 @@ int updateCommandParamToMemory(Word command,char* token){
 
 int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
+  Word arg;
+  int ERROR = 0;
 	switch (command->command.opcode) {
 		case cmp:
 
     /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
-    if ((token = strtok(token,","))==NULL) {
+    if ((token = strtok(token," ,"))==NULL) {
       printf("> ERROR: '%s'\n",token );
       return 0;
     }
-    if(!checkSrcParam(command,token)){
-      /*ERROR*/
+    printf("TOKEN %s\n",token );
+    if(strlen(token)==0){
+      printf("ERROR: Token has no arguments!\n");
       return 0;
     }
+    if(isParamIAR(command,token,SOURCE)){
+      ERROR = 0;
+    }else if(isParamDRAR(command,token,SOURCE)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,SOURCE)) {
+      ERROR = 0;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
+    /*--------------------------DESTINATION---------------------------*/
+    if ((token = strtok(NULL,"\t\n"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(strlen(token)==0){
+      printf("> ERROR: Token has no arguments!\n");
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(isParamIAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if(isParamDRAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,DESTINATION)) {
+      ERROR = 0;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
 
-    /*-----------------------------------------------------*/
-
-
-		break;
+		return !ERROR;
 		case mov:
 		case add:
 		case sub:
+    /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
+    if ((token = strtok(token," ,"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      return 0;
+    }
+    if(strlen(token)==0){
+      printf("ERROR: Token has no arguments!\n");
+      return 0;
+    }
+    if(isParamIAR(command,token,SOURCE)){
+      ERROR = 0;
+    }else if(isParamDRAR(command,token,SOURCE)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,SOURCE)) {
+      ERROR = 0;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
+    /*-----------------------DESTINATION------------------------------*/
+    if ((token = strtok(NULL," \t\n"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(strlen(token)==0){
+      printf("> ERROR: Token has no arguments!\n");
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(isParamIAR(command,token,DESTINATION)){
+      ERROR = 1;
+    }else if(isParamDRAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,DESTINATION)) {
+      ERROR = 1;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
 
-		break;
+    return !ERROR;
+
 		case nt:
 		case clr:
 		case inc:
@@ -469,12 +563,103 @@ int setUpCommandParams(Word* command,char *token){
 		case bne:
 		case red:
 		case jsr:
+    /*--------------------------DESTINATION---------------------------*/
+    if ((token = strtok(token," \t\n"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(strlen(token)==0){
+      printf("> ERROR: Token has no arguments!\n");
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(isParamIAR(command,token,DESTINATION)){
+      ERROR = 1;
+    }else if(isParamDRAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,DESTINATION)) {
+      ERROR = 1;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
 
-		break;
+		return !ERROR;
 		case prn:
-		break;
+    /*-----------------------DESTINATION------------------------------*/
+    if ((token = strtok(token," \t\n"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(strlen(token)==0){
+      printf("> ERROR: Token has no arguments!\n");
+      ERROR = 0;
+      return !ERROR;
+    }
+    if(isParamIAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if(isParamDRAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,DESTINATION)) {
+      ERROR = 0;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
+
+    return !ERROR;
 		case lea:
-		break;
+    /*FIRST PARAM:   -------------------------*/
+    if ((token = strtok(token," ,"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      return 0;
+    }
+    if(strlen(token)==0){
+      printf("ERROR: Token has no arguments!\n");
+      return 0;
+    }
+    if(isParamIAR(command,token,SOURCE)){
+      ERROR = 1;
+    }else if(isParamDRAR(command,token,SOURCE)){
+      ERROR = 1;
+    }else if (isParamIDAR(command,token,SOURCE)) {
+      ERROR = 1;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
+    /*-----------------------DESTINATION------------------------------*/
+    if ((token = strtok(NULL,"\t\n"))==NULL) {
+      printf("> ERROR: '%s'\n",token );
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(strlen(token)==0){
+      printf("> ERROR: Token has no arguments!\n");
+      ERROR = 1;
+      return !ERROR;
+    }
+    if(isParamIAR(command,token,DESTINATION)){
+      ERROR = 1;
+    }else if(isParamDRAR(command,token,DESTINATION)){
+      ERROR = 0;
+    }else if (isParamIDAR(command,token,DESTINATION)) {
+      ERROR = 1;
+    }else{
+      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
+      command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+      codewords.array[IC] = arg;
+      IC++;
+    }
+    return !ERROR;
     default:
     printf("> ERROR LINE 476  \n");
     return 1;
@@ -483,8 +668,87 @@ int setUpCommandParams(Word* command,char *token){
   return 1;
 
 }
+int isParamIAR(Word *command,char* token,int location){
+  Word arg;
+  if(token[0] == '#'){
+    if(location == SOURCE){
+      command->command.srcar = INSTANT_ADDRESS_RESOLUTION;
+    }
+    if(location == DESTINATION){
+      command->command.destar = INSTANT_ADDRESS_RESOLUTION;
+    }
+    arg.pvalue.value = strtol(token+1,NULL, 10);
+    codewords.array[IC] = arg;
+    IC++;
+    printf("Argument: '%d' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[IC-2].command.opcode,codewords.array[IC-2].command.srcar );
+    return 1;
+  }
+  /*Raw number was not found.*/
+  return 0;
+}
+int isParamDRAR(Word *command,char* token,int location){
+  Word arg;
+  int i = 0;
+  while (i < REGISTERS_NUMER) {
+    if (!strcmp(registers[i],token)) {
+      if(location == SOURCE){
+        command->command.srcar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
+        arg.paddress.src = i;
+        codewords.array[IC] = arg;
+        IC++;
+      }
+      if(location == DESTINATION){
+        if ((command->command.grp == TWOP)&&(command->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
+          printf("> DEBAG 701 TWO REGS\n");
+          codewords.array[IC-1].paddress.dest = i;
+        }else{
+          arg.paddress.src = i;
+          codewords.array[IC] = arg;
+          IC++;
+        }
+        command->command.destar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
+      }
 
-int checkSrcParam(Word *command,char* token){
+      return 1;
+    }
+    i++;
+  }
+  /*Register was not found.*/
+  return 0;
+
+}
+int isParamIDAR(Word *command,char* token,int location){
+  Word arg;
+  int structureIndex = 0;
+  int const NUMBEROFSTRUCTURE = 3;
+  char idarStructure[] = {'[','-',']'};
+  int i = 0;
+  while (i<strlen(token)) {
+    if (!(structureIndex<NUMBEROFSTRUCTURE)) {
+      break;
+    }
+    if (token[i]==idarStructure[structureIndex]) {
+      /* code */
+      structureIndex++;
+    }
+    i++;
+  }
+  if (structureIndex==NUMBEROFSTRUCTURE) {
+    if(location == SOURCE){
+      command->command.srcar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
+    }
+    if(location == DESTINATION){
+      command->command.destar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
+    }
+    codewords.array[IC] = arg;
+    IC++;
+    return 1;
+  }
+  /*Structure was not found.*/
+  return 0;
+}
+
+/*int checkSrcParam(Word *command,char* token){
 
   Word arg;
   int i = 0;
@@ -492,17 +756,22 @@ int checkSrcParam(Word *command,char* token){
   char idarStructure[] = {'[','-',']'};
   int const NUMBEROFSTRUCTURE = 3;
 
-  printf("Token: '%s'\n",token );
+  printf("Token: '%s'\n",token );*/
+  /*Check if token contain string.*/
+  /*if (strlen(token)==0) {
+    printf("> ERROR: No token was entered!\n");
+    return 0;
+  }*/
   /*Check if first parameter is a register...*/
-  if(token[0] == '#'){
+  /*if(token[0] == '#'){
     command->command.srcar = INSTANT_ADDRESS_RESOLUTION;
-    arg.pvalue.value = strtol(token,NULL, 10);
+    arg.pvalue.value = strtol(token+1,NULL, 10);
     codewords.array[IC] = arg;
     IC++;
     printf("Argument: '%u' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[IC-2].command.opcode,codewords.array[IC-2].command.srcar );
     return 1;
-  }
-  while (i < REGISTERS_NUMER) {
+  }*/
+  /*while (i < REGISTERS_NUMER) {
     if (!strcmp(registers[i],token)) {
       command->command.srcar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
       arg.paddress.src = i;
@@ -510,11 +779,11 @@ int checkSrcParam(Word *command,char* token){
       IC++;
       return 1;
     }
-  }
-  i = 0;
+  }*/
+  /*Check if token is K[x - y ] structured.*/
+  /*i = 0;
   while (i<strlen(token)&&structureIndex<NUMBEROFSTRUCTURE) {
     if (token[i]==idarStructure[structureIndex]) {
-      /* code */
       structureIndex++;
     }
     i++;
@@ -523,7 +792,10 @@ int checkSrcParam(Word *command,char* token){
     command->command.srcar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
     IC++;
     return 1;
-  }
+  }*/
+  /*
   command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+  codewords.array[IC] = arg;
+  IC++;
   return 1;
-}
+}*/
