@@ -77,7 +77,7 @@ int parseLine(char* line){
     if (hasSymbole) {
       /* Symbole exist: */
       symbole.type = INSTRUCTION;
-      symbole.address.word.cell = DC;
+      symbole.address.word.cell = datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -102,7 +102,7 @@ int parseLine(char* line){
     /* code */
     if (hasSymbole) {
       symbole.type = INSTRUCTION;
-      symbole.address.word.cell = DC;
+      symbole.address.word.cell = datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -139,7 +139,7 @@ int parseLine(char* line){
 
   if(hasSymbole){
     symbole.type = ACTION;
-    symbole.address.word.cell = IC;
+    symbole.address.word.cell = codewords.numberOfWords;
     symbole.isExternal = true;
     addSymbole(symbole);
   }
@@ -151,7 +151,7 @@ int parseLine(char* line){
       if(!strcmp(actions[iaction],token)){
         wasFound = true;
         actionID = iaction;
-        printf("%s Was found.\n", token);
+        printf("> %s Was found.\n", token);
         break;
       }
       iaction++;
@@ -159,7 +159,7 @@ int parseLine(char* line){
   }
   if (!wasFound) {
     /* code */
-    printf("ERROR operator: '%s' Was not found! \n", token);
+    printf("> ERROR operator: '%s' Was not found! \n", token);
     return 0;
   }
 
@@ -178,12 +178,13 @@ int parseLine(char* line){
     char* temp = strtok(NULL,"\n\t");
     if (temp==NULL&&word.command.grp!=NOP) {
       /*ERROR NO PARAMETERS*/
-      printf("ERROR NO PARAMETER!\n");
-      token =NULL;
+      printf("> ERROR NO PARAMETER!\n");
+      token = NULL;
     }
     token = temp;
   }
-  if (token == NULL) {
+
+  if (token == NULL&&word.command.grp!=NOP) {
     return 0;
   }
   if(!updateCommandParamToMemory(word,token)){
@@ -233,7 +234,7 @@ int addSymbole(Symbole symbole){
     /* code */
     symboles.size += 10;
     if((symboles.array = realloc(symboles.array,sizeof(symbole)*symboles.size))==NULL){
-      printf("ERROR!\n");
+      printf("> ERROR! line 236\n");
     }
   }
 
@@ -241,14 +242,14 @@ int addSymbole(Symbole symbole){
     /* code */
     if(!strcmp(symboles.array[i].name,symbole.name)){
     /*-------------------ERROR: Multiple declearation!----------------------*/
-      printf("ERROR: duplicate declearation: %s\n",symbole.name);
+      printf("> ERROR: duplicate declearation: %s\n",symbole.name);
       return 0;
     }
     i++;
   }
   symboles.array[symboles.numberOfSymboles] = symbole;
-  printf("numberOfSymboles: %d\n",symboles.numberOfSymboles);
-  printf("Added: '%s' to Symboles\n",symboles.array[symboles.numberOfSymboles].name);
+  printf("> numberOfSymboles: %d\n",symboles.numberOfSymboles);
+  printf("> Added: '%s' to Symboles\n",symboles.array[symboles.numberOfSymboles].name);
   symboles.numberOfSymboles++;
   return 1;
 }
@@ -268,7 +269,7 @@ int updateDataToMemory(char* token){
       /* code */
       if (!(isdigit(token[i]))&&!(token[i]=='-')&&!(token[i]=='+')) {
         /* code */
-        printf("ERROR: '%s' is invalid value!\n",token );
+        printf("> ERROR: '%s' is invalid value!\n",token );
         return 0;
       }
       i++;
@@ -285,10 +286,10 @@ int updateDataToMemory(char* token){
       /*ERROR VALUE TOO BIG*/
       return 0;
     }
-    datawords.array[DC] = value;
-    printf("The value %d was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,DC );
+    datawords.array[datawords.numberOfWords] = value;
+    printf("> The value %d was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].word.cell,datawords.numberOfWords );
     token = strtok(NULL,", \n");
-    DC++;
+    datawords.numberOfWords++;
   }
   return 1;
 }
@@ -301,7 +302,6 @@ int updateStringToMemory(char* token){
     int i = 0;
     int lindex;
     int found = 0;
-    printf("TEST: %s\n",token );
     /*
     if(token[0]!='\"'){
       printf("ERROR missing first -> Cytation <-\n");
@@ -317,7 +317,7 @@ int updateStringToMemory(char* token){
     }
     if (!found) {
       /*ERROR last quote not found!*/
-      printf("ERROR missing first -> Cytation <-\n");
+      printf("> ERROR missing first -> Cytation <-\n");
       return 0;
     }
 
@@ -334,7 +334,7 @@ int updateStringToMemory(char* token){
     }
     if (!found) {
       /*ERROR last quote not found!*/
-      printf("ERROR missing last -> Cytation <-\n");
+      printf("> ERROR missing last -> Cytation <-\n");
       return 0;
     }
     while (i<lindex) {
@@ -349,10 +349,10 @@ int updateStringToMemory(char* token){
         /*ERROR VALUE TOO BIG*/
         return 0;
       }
-      datawords.array[DC] = val;
-      printf("The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[DC].word.cell,datawords.array[DC].word.cell,DC );
+      datawords.array[datawords.numberOfWords] = val;
+      printf("> The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].word.cell,datawords.array[datawords.numberOfWords].word.cell,datawords.numberOfWords );
       i++;
-      DC++;
+      datawords.numberOfWords++;
     }
 
     return 1;
@@ -362,22 +362,25 @@ int updateCommandParamToMemory(Word command,char* token){
   int error = 0;
   switch (command.command.grp) {
     case NOP:
-    {
+    /*{
       int i = 0;
+
       while (i<strlen(token)) {
         if (token[i]==' '||token[i]=='\0'||token[i]=='\t') {
-          /* code */
           i++;
         }
         error = 1;
         break;
       }
     }
+    printf("DEBAG WORKS\n" );
     if (error) {
-      /* code */
-      printf("Invalid Token, no parameter required: '%s'\n",token);
+      printf("> Invalid Token, no parameter required: '%s'\n",token);
       return 0;
-    }
+    }*/
+    codewords.array[codewords.numberOfWords] = command;
+    word = &codewords.array[codewords.numberOfWords];
+    codewords.numberOfWords++;
 
     return 1;
     case ONEOP:
@@ -386,7 +389,7 @@ int updateCommandParamToMemory(Word command,char* token){
       while (i<strlen(token)) {
         if (token[i]==',') {
           /* ERROR TOO MANY PARAMS */
-          printf("ERROR: \"%s\" is an iligal parameter for this type of command.\n",token );
+          printf("> ERROR: \"%s\" is an iligal parameter for this type of command.\n",token );
           error = 1;
           break;
         }
@@ -401,14 +404,15 @@ int updateCommandParamToMemory(Word command,char* token){
 
       return 0;
     }
-    codewords.array[IC] = command;
-    word = &codewords.array[IC];
-    IC++;
-    if(!setUpCommandParams(&codewords.array[IC-1],token)){
+    codewords.array[codewords.numberOfWords] = command;
+    word = &codewords.array[codewords.numberOfWords];
+    codewords.numberOfWords++;
+    printf("> DEBAG 406: N: %d - S: %d\n", codewords.numberOfWords,codewords.size);
+    if(!setUpCommandParams(&codewords.array[codewords.numberOfWords-1],token)){
       printf("> DEBAG ERROR!!!\n");
       return 0;
     }
-    printf("COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
+    printf("> COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
 
     return 1;
     case TWOP:
@@ -430,20 +434,19 @@ int updateCommandParamToMemory(Word command,char* token){
     if (error) {
       return 0;
     }
-    printf("PARAMS: '%s'\n",token);
     if (!checkSize(&codewords)) {
       /* ERROR ALLOCATING SPACE! */
 
       return 0;
     }
-    codewords.array[IC] = command;
-    word = &codewords.array[IC];
-    IC++;
-    if(!setUpCommandParams(&codewords.array[IC-1],token)){
+    codewords.array[codewords.numberOfWords] = command;
+    word = &codewords.array[codewords.numberOfWords];
+    codewords.numberOfWords++;
+    if(!setUpCommandParams(&codewords.array[codewords.numberOfWords-1],token)){
       printf("> DEBAG ERROR!!!\n");
       return 0;
     }
-    printf("COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
+    printf("> COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",word->command.grp,word->command.opcode,word->command.srcar,word->command.destar);
 
 
 
@@ -462,18 +465,19 @@ int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
   Word arg;
   int ERROR = 0;
-
+printf("> PARAMS: '%s'\n",token);
+printf("> DEBAG 464: %d\n",command->command.opcode );
 	switch (command->command.opcode) {
 		case cmp:
 
     /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
     if ((token = strtok(token," ,"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 469: '%s'\n",token );
       return 0;
     }
     printf("TOKEN %s\n",token );
     if(strlen(token)==0){
-      printf("ERROR: Token has no arguments!\n");
+      printf("ERROR 474: Token has no arguments!\n");
       return 0;
     }
     if(isParamIAR(command,token,SOURCE)){
@@ -483,19 +487,18 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,SOURCE)) {
       ERROR = 0;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     /*--------------------------DESTINATION---------------------------*/
     if ((token = strtok(NULL," \t\n"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 490: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
     }
     if(strlen(token)==0){
-      printf("> ERROR: Token has no arguments!\n");
+      printf("> ERROR 495: Token has no arguments!\n");
       ERROR = 1;
       return !ERROR;
     }
@@ -506,10 +509,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 0;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
 
 		return !ERROR;
@@ -518,11 +520,11 @@ int setUpCommandParams(Word* command,char *token){
 		case sub:
     /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
     if ((token = strtok(token," ,"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 517: '%s'\n",token );
       return 0;
     }
     if(strlen(token)==0){
-      printf("ERROR: Token has no arguments!\n");
+      printf("ERROR 521: Token has no arguments!\n");
       return 0;
     }
     if(isParamIAR(command,token,SOURCE)){
@@ -532,19 +534,18 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,SOURCE)) {
       ERROR = 0;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     /*-----------------------DESTINATION------------------------------*/
     if ((token = strtok(NULL," \t\n"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 537: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
     }
     if(strlen(token)==0){
-      printf("> ERROR: Token has no arguments!\n");
+      printf("> ERROR 542: Token has no arguments!\n");
       ERROR = 1;
       return !ERROR;
     }
@@ -555,10 +556,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
 
     return !ERROR;
@@ -573,15 +573,16 @@ int setUpCommandParams(Word* command,char *token){
 		case jsr:
     /*--------------------------DESTINATION---------------------------*/
     if ((token = strtok(token," \t\n"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 570: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
     }
     if(strlen(token)==0){
-      printf("> ERROR: Token has no arguments!\n");
+      printf("> ERROR 575: Token has no arguments!\n");
       ERROR = 1;
       return !ERROR;
     }
+    printf("> DEBAG 579: WORKING!\n");
     if(isParamIAR(command,token,DESTINATION)){
       ERROR = 1;
     }else if(isParamDRAR(command,token,DESTINATION)){
@@ -589,10 +590,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     command->command.srcar = 0;
 
@@ -601,12 +601,12 @@ int setUpCommandParams(Word* command,char *token){
 		case prn:
     /*-----------------------DESTINATION------------------------------*/
     if ((token = strtok(token," \t\n"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 598: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
     }
     if(strlen(token)==0){
-      printf("> ERROR: Token has no arguments!\n");
+      printf("> ERROR 603: Token has no arguments!\n");
       ERROR = 0;
       return !ERROR;
     }
@@ -617,21 +617,20 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 0;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     command->command.srcar = 0;
     return !ERROR;
 		case lea:
     /*FIRST PARAM:   -------------------------*/
     if ((token = strtok(token," ,"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 623: '%s'\n",token );
       return 0;
     }
     if(strlen(token)==0){
-      printf("ERROR: Token has no arguments!\n");
+      printf("ERROR 627: Token has no arguments!\n");
       return 0;
     }
     if(isParamIAR(command,token,SOURCE)){
@@ -641,19 +640,18 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,SOURCE)) {
       ERROR = 1;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     /*-----------------------DESTINATION------------------------------*/
     if ((token = strtok(NULL,"\t\n"))==NULL) {
-      printf("> ERROR: '%s'\n",token );
+      printf("> ERROR 643: '%s'\n",token );
       ERROR = 1;
       return !ERROR;
     }
     if(strlen(token)==0){
-      printf("> ERROR: Token has no arguments!\n");
+      printf("> ERROR 648: Token has no arguments!\n");
       ERROR = 1;
       return !ERROR;
     }
@@ -664,10 +662,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
-      printf("> TOKEN IS DIRECT ADDRESS RELOLUTION: '%s'\n", token);
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
-      codewords.array[IC] = arg;
-      IC++;
+      codewords.array[codewords.numberOfWords] = arg;
+      codewords.numberOfWords++;
     }
     return !ERROR;
     default:
@@ -688,9 +685,9 @@ int isParamIAR(Word *command,char* token,int location){
       command->command.destar = INSTANT_ADDRESS_RESOLUTION;
     }
     arg.pvalue.value = strtol(token+1,NULL, 10);
-    codewords.array[IC] = arg;
-    IC++;
-    printf("Argument: '%d' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[IC-2].command.opcode,codewords.array[IC-2].command.srcar );
+    codewords.array[codewords.numberOfWords] = arg;
+    codewords.numberOfWords++;
+    printf("Argument: '%d' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[codewords.numberOfWords-2].command.opcode,codewords.array[codewords.numberOfWords-2].command.srcar );
     return 1;
   }
   /*Raw number was not found.*/
@@ -705,16 +702,16 @@ int isParamDRAR(Word *command,char* token,int location){
       if(location == SOURCE){
         command->command.srcar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
         arg.paddress.src = i;
-        codewords.array[IC] = arg;
-        IC++;
+        codewords.array[codewords.numberOfWords] = arg;
+        codewords.numberOfWords++;
       }
       if(location == DESTINATION){
         if ((command->command.grp == TWOP)&&(command->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
-          codewords.array[IC-1].paddress.dest = i;
+          codewords.array[codewords.numberOfWords-1].paddress.dest = i;
         }else{
           arg.paddress.src = i;
-          codewords.array[IC] = arg;
-          IC++;
+          codewords.array[codewords.numberOfWords] = arg;
+          codewords.numberOfWords++;
         }
         command->command.destar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
       }
@@ -750,8 +747,8 @@ int isParamIDAR(Word *command,char* token,int location){
     if(location == DESTINATION){
       command->command.destar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
     }
-    codewords.array[IC] = arg;
-    IC++;
+    codewords.array[codewords.numberOfWords] = arg;
+    codewords.numberOfWords++;
     return 1;
   }
   /*Structure was not found.*/

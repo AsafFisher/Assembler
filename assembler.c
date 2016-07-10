@@ -23,11 +23,17 @@ int main(int argc, const char * argv[]){
 }
 
 int firstEntry(FILE* input){
+	int lineNumber = 1;
 
 
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
-		parseLine(line);
+		if(!parseLine(line)){
+			printf("Assembler > ERROR Assembler throw exception! (LINE: %d) \nabort file!\n",lineNumber);
+			break;
+		}
+		lineNumber++;
+
 
 
 
