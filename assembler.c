@@ -17,6 +17,7 @@ int main(int argc, const char * argv[]){
 		if(!firstEntry(fi)){
 			continue;
 		}
+
 	}
 	return 0;
 
@@ -38,5 +39,6 @@ int firstEntry(FILE* input){
 
 
 	}
+	printArr();
 	return 1;
 }

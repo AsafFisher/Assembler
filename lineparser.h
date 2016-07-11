@@ -5,6 +5,7 @@ int IC;
 /*Data counter*/
 int DC;
 int parseLine(char* line);
+void printArr(void);
 
 
 typedef enum{ACTION = 0,INSTRUCTION}Type;

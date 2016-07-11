@@ -18,8 +18,8 @@ typedef union Word{
 	/*Binary structure: |DUMY|PARAM2|PARAM1|ERA|*/
 	struct paddress{
 		unsigned int ERA:2;
-		int src:6;
-		int dest:6;
+		 int src:6;
+		 int dest:6;
 		unsigned int dumy:1;
 
 	}paddress;
@@ -51,6 +51,7 @@ enum{ABSULUT=0,EXTERNAL,RELOCATABLE};
 /*Group*/
 enum{NOP = 0, ONEOP,TWOP};
 /*Action opcode*/
+/*      0    1  2   3   4  5   6   7   8   9   10  11  12  13  14  15*/
 enum{mov=0,cmp,add,sub,nt,clr,lea,inc,dec,jmp,bne,red,prn,jsr,rts,stop};
 Word createInstanceOfWordWithParam(Word word);
 Word createInstanceOfWord();
@@ -62,3 +63,4 @@ Word createInstaceOfParameterValueWithParam(int pERA, int pvalue);
 Word createInstaceOfParameterValue();
 int setWordValue(Word *word, int value);
 int checkSize(Words *words);
+void printInstructionsArray(Words *words);

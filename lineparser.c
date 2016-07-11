@@ -754,6 +754,9 @@ int isParamIDAR(Word *command,char* token,int location){
   /*Structure was not found.*/
   return 0;
 }
+void printArr() {
+  printInstructionsArray(&codewords);
+}
 
 /*int checkSrcParam(Word *command,char* token){
 
