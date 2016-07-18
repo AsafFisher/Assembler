@@ -118,12 +118,17 @@ int setWordValue(Word *word, int value){
 }
 
 int checkSize(Words *words){
-	if (words->size<=words->numberOfWords) {
+	if (words->size<=(words->numberOfWords+5)) {
     /* code */
 
     words->size += 10;
     /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
     if ((words->array = realloc(words->array, sizeof(Word)*words->size))==NULL) {
+      /* code */
+      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+			return 0;
+    }
+		if ((words->lines = realloc(words->lines, sizeof(int)*words->size))==NULL) {
       /* code */
       printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
@@ -140,27 +145,44 @@ void printInstructionsArray(Words *words){
 
 	while (i<words->numberOfWords) {
 		Word currentWord;
+		int currentLine;
 		currentWord = words->array[i];
+		currentLine = words->lines[i];
 			switch (currentWord.command.grp) {
 				case NOP:
-				printf("COMMAND (%d) > GROUP: %d, OPCODE: %d, ~SRCAR~: %d, ~DESTAR~: %d\n",i,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
+				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, ~SRCAR~: %d, ~DESTAR~: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
 				break;
 				case ONEOP:
-				printf("COMMAND (%d) > GROUP: %d, OPCODE: %d, ~SRCAR~: %d, DESTAR: %d\n",i,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
+				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, ~SRCAR~: %d, DESTAR: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
-				printf("DEBAG > 152: %d\n",words->array[i].paddress.dest );
-				printf("PARAMETERS (%d) > DEBAG: SRC: %d DESTINATION: %d\n",i, words->array[i].paddress.src,words->array[i].paddress.dest);
+				printf("DEBAG > 152: %d\n",words->array[i].pvalue.value );
+				if(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION){
+					printf("PARAMETERS (%d) > ~SRC~: %d DESTINATION: %d\n",i, words->array[i].paddress.src,words->array[i].paddress.dest);
+				}else{
+					printf("PARAMETERS (%d) > VALUE: %d\n",i, words->array[i].pvalue.value);
+				}
+
 				i++;
-				break; 
+				break;
 				case TWOP:
-				printf("COMMAND (%d) > GROUP: %d, OPCODE: %d, SRCAR: %d, DESTAR: %d\n",i,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
+				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, SRCAR: %d, DESTAR: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
 				if ((currentWord.command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)&&(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
 					printf("PARAMETERS (%d) > SOURCE: %d, DESTINATION: %d \n",i,words->array[i].paddress.src, words->array[i].paddress.dest);
 					i++;
-				}else{
+				}else if(currentWord.command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION){
 					printf("PARAMETERS (%d - %d) > SOURCE: %d, ",i,i+1,words->array[i].paddress.src);
+					i++;
+					printf("DESTINATION: %d\n",words->array[i].pvalue.value );
+					i++;
+				}else if(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION){
+					printf("PARAMETERS (%d - %d) > SOURCE: %d, ",i,i+1,words->array[i].pvalue.value);
+					i++;
+					printf("DESTINATION: %d\n",words->array[i].paddress.dest );
+					i++;
+				}else{
+					printf("PARAMETERS (%d - %d) > SOURCE: %d, ",i,i+1,words->array[i].pvalue.value);
 					i++;
 					printf("DESTINATION: %d\n",words->array[i].pvalue.value );
 					i++;

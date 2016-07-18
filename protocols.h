@@ -40,6 +40,7 @@ typedef union Word{
 }Word;
 typedef struct{
 	Word *array;
+	int* lines;
 	int numberOfWords;
 	int size;
 }Words;

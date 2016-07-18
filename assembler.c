@@ -17,6 +17,7 @@ int main(int argc, const char * argv[]){
 		if(!firstEntry(fi)){
 			continue;
 		}
+		rewind(fi);
 
 	}
 	return 0;
@@ -29,7 +30,7 @@ int firstEntry(FILE* input){
 
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
-		if(!parseLine(line)){
+		if(!parseLine(line,lineNumber)){
 			printf("Assembler > ERROR Assembler throw exception! (LINE: %d) \nabort file!\n",lineNumber);
 			break;
 		}

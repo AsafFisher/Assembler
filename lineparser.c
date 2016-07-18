@@ -17,6 +17,7 @@ enum{false = 0,true};
 Words codewords;
 Words datawords;
 Symboles symboles;
+int lineNumber;
 int addSymbole(Symbole symbole);
 int updateDataToMemory(char* token);
 int updateStringToMemory(char* token);
@@ -39,7 +40,7 @@ int isParamIDAR(Word *command,char* token, int location);
 
 
 
-int parseLine(char* line){
+int parseLine(char* buff,int number){
   Symbole symbole;
   char *token;
   int hasSymbole;
@@ -47,6 +48,7 @@ int parseLine(char* line){
   int wasFound;
   Word word;
   hasSymbole = false;
+  lineNumber = number;
 
   if (!checkSize(&codewords)) {
     /* ERROR ALLOCATING SPACE! */
@@ -59,7 +61,7 @@ int parseLine(char* line){
 
 
 
-  token = strtok(line, " \n");
+  token = strtok(buff, " \n");
   if (token[strlen(token)-1]==':') {
     /* code */
 
@@ -379,6 +381,7 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }*/
     codewords.array[codewords.numberOfWords] = command;
+    codewords.lines[codewords.numberOfWords] = lineNumber;
     word = &codewords.array[codewords.numberOfWords];
     codewords.numberOfWords++;
 
@@ -405,6 +408,7 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
     codewords.array[codewords.numberOfWords] = command;
+    codewords.lines[codewords.numberOfWords] = lineNumber;
     word = &codewords.array[codewords.numberOfWords];
     codewords.numberOfWords++;
     printf("> DEBAG 406: N: %d - S: %d\n", codewords.numberOfWords,codewords.size);
@@ -440,6 +444,7 @@ int updateCommandParamToMemory(Word command,char* token){
       return 0;
     }
     codewords.array[codewords.numberOfWords] = command;
+    codewords.lines[codewords.numberOfWords] = lineNumber;
     word = &codewords.array[codewords.numberOfWords];
     codewords.numberOfWords++;
     if(!setUpCommandParams(&codewords.array[codewords.numberOfWords-1],token)){
@@ -465,8 +470,8 @@ int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
   Word arg;
   int ERROR = 0;
-printf("> PARAMS: '%s'\n",token);
-printf("> DEBAG 464: %d\n",command->command.opcode );
+  printf("> PARAMS: '%s'\n",token);
+  printf("> DEBAG 464: %d\n",command->command.opcode );
 	switch (command->command.opcode) {
 		case cmp:
 

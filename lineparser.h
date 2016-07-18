@@ -4,7 +4,7 @@ int IC;
 
 /*Data counter*/
 int DC;
-int parseLine(char* line);
+int parseLine(char* line, int lineNumber);
 void printArr(void);
 
 
