@@ -17,6 +17,7 @@ enum{false = 0,true};
 Words codewords;
 Words datawords;
 Symboles symboles;
+Unundentified und;
 int lineNumber;
 int addSymbole(Symbole symbole);
 int updateDataToMemory(char* token);
@@ -35,7 +36,7 @@ int isParamDRAR(Word *command,char* token, int location);
 /*Check if param is INSTANT_DYNAMIC_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
 int isParamIDAR(Word *command,char* token, int location);
 
-
+int checkSymboleSize();
 
 
 
@@ -232,13 +233,10 @@ int addSymbole(Symbole symbole){
     symboles.size += 10;
     symboles.symboles = malloc(symboles.size);
   }*/
-  if (symboles.size <= symboles.numberOfSymboles) {
-    /* code */
-    symboles.size += 10;
-    if((symboles.array = realloc(symboles.array,sizeof(symbole)*symboles.size))==NULL){
-      printf("> ERROR! line 236\n");
-    }
+  if(!checkSymboleSize()){
+    return 0;
   }
+
 
   while (i<symboles.numberOfSymboles) {
     /* code */
@@ -761,6 +759,18 @@ int isParamIDAR(Word *command,char* token,int location){
 }
 void printArr() {
   printInstructionsArray(&codewords);
+}
+int checkSymboleSize(){
+  if (symboles.size <= symboles.numberOfSymboles+2) {
+    /* code */
+    symboles.size += 10;
+    if((symboles.array = realloc(symboles.array,sizeof(Symbole)*symboles.size))==NULL){
+      printf("> ERROR! not enogh space\n");
+      return 0;
+    }
+
+  }
+  return 1;
 }
 
 /*int checkSrcParam(Word *command,char* token){

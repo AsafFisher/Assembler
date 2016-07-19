@@ -21,3 +21,9 @@ typedef struct{
   int numberOfSymboles;
   int size;
 }Symboles;
+
+typedef struct{
+  char* name;
+  int numberOfShows;
+  Word address;
+}Unundentifies;
