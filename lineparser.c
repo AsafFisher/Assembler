@@ -9,6 +9,7 @@ char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 #define REGISTERS_NUMER 8
 #define SOURCE 0
 #define DESTINATION 1
+#define kMAX_SYMBOLE_NAME_SIZE 20
 #define DATA ".data"
 #define STRING ".string"
 #define EXTERN ".extern"
@@ -17,7 +18,7 @@ enum{false = 0,true};
 Words codewords;
 Words datawords;
 Symboles symboles;
-Unundentified und;
+Undefineds und;
 int lineNumber;
 int addSymbole(Symbole symbole);
 int updateDataToMemory(char* token);
@@ -59,6 +60,7 @@ int parseLine(char* buff,int number){
     /* ERROR ALLOCATING SPACE! */
     return 0;
   }
+
 
 
 
@@ -665,6 +667,7 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
+
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -733,15 +736,25 @@ int isParamIDAR(Word *command,char* token,int location){
   int const NUMBEROFSTRUCTURE = 3;
   char idarStructure[] = {'[','-',']'};
   int i = 0;
+  int symbEnd;
   while (i<strlen(token)) {
     if (!(structureIndex<NUMBEROFSTRUCTURE)) {
       break;
     }
     if (token[i]==idarStructure[structureIndex]) {
       /* code */
+      if(structureIndex == 0){
+        symbEnd = i;
+      }
       structureIndex++;
     }
     i++;
+  }
+  if(symbEnd>0){
+    Undefined *und;
+    und = (Undefined*)malloc(sizeof(Undefined));
+    und = checkUndSize(&und);
+    memcpy(und->name,token,symbEnd);
   }
   if (structureIndex==NUMBEROFSTRUCTURE) {
     if(location == SOURCE){
@@ -772,7 +785,42 @@ int checkSymboleSize(){
   }
   return 1;
 }
+int checkUndsSize(Undefineds *und){
+	if (und->size<=(und->numberOfUnd+3)) {
+    /* code */
 
+    words->size += 3;
+    /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
+    if ((und->array = realloc(und->array, sizeof(und)*und->size))==NULL) {
+      /* code */
+      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+			return 0;
+    }
+    printf(">   ARRAY RESIZED!\n");
+		return 1;
+  }
+	return 1;
+
+}
+int checkUndSize(Undefineds *und){
+  if (!(und->name)) {
+    name = (char*)malloc(kMAX_SYMBOLE_NAME_SIZE*sizeof(char));
+  }
+	if (und->size<=(und->numberOfShows+3)) {
+
+    words->size += 3;
+    /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
+    if ((und->shows = (int*)realloc(und->shows, sizeof(int)*und->size))==NULL) {
+      /* code */
+      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+			return 0;
+    }
+    printf(">   ARRAY RESIZED!\n");
+		return 1;
+  }
+	return 1;
+
+}
 /*int checkSrcParam(Word *command,char* token){
 
   Word arg;

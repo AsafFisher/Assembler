@@ -128,11 +128,7 @@ int checkSize(Words *words){
       printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
     }
-		if ((words->lines = realloc(words->lines, sizeof(int)*words->size))==NULL) {
-      /* code */
-      printf(">    ERROR NOT ENOGH SPACE!!!\n");
-			return 0;
-    }
+		
     printf(">   ARRAY RESIZED!\n");
 		return 1;
   }

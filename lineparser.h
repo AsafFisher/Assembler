@@ -24,6 +24,12 @@ typedef struct{
 
 typedef struct{
   char* name;
+  int* shows;
   int numberOfShows;
-  Word address;
-}Unundentifies;
+  int size;
+}Undefined;
+typedef struct{
+  Undefined* array;
+  int numberOfUnd;
+  int size;
+}Undefineds;

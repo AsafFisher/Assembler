@@ -10,7 +10,7 @@ int main(int argc, const char * argv[]){
 
 	for(i=1;i<argc;i++){
 		if(!(fi = fopen(argv[i], "r"))){
-			fprintf(stderr,"ERROR:\n");
+			fprintf(stderr,"-------------------------FATAL-------------------------\n");
 			continue;
 		}
 
