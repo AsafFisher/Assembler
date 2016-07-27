@@ -98,9 +98,7 @@ if(!checkUndsSize(&unds)){
       }
     }
     token = strtok(NULL,"\t");
-    /*TODO: Built update memory.
-    Problem: No way to detect ints.
-    */
+
     if(!updateDataToMemory(token)){
       /*Error Saving data.*/
       return 0;
