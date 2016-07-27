@@ -70,7 +70,9 @@ if(!checkUndsSize(&unds)){
 
 
 
-  token = strtok(buff, " \n");
+    if(!(token = strtok(buff, " \n"))){
+        return 1;
+    }
   if (token[strlen(token)-1]==':') {
     /* code */
 
@@ -149,7 +151,7 @@ if(!checkUndsSize(&unds)){
   }
 
   if(hasSymbole){
-    symbole.type = ACTION;
+    symbole.type = ACTIONT;
     symbole.address.word.cell = codewords.numberOfWords;
     symbole.isExternal = true;
     addSymbole(symbole);
@@ -170,7 +172,7 @@ if(!checkUndsSize(&unds)){
   }
   if (!wasFound) {
     /* code */
-    printf("> ERROR operator: '%s' Was not found! \n", token);
+    printf("> ERROR (LINE %d) operator: '%s' Was not found! \n", lineNumber,token);
     return 0;
   }
 
@@ -523,6 +525,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 0;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -548,6 +553,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,SOURCE)) {
       ERROR = 0;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -570,6 +578,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -604,6 +615,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -631,6 +645,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 0;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -654,6 +671,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,SOURCE)) {
       ERROR = 1;
     }else{
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -676,7 +696,9 @@ int setUpCommandParams(Word* command,char *token){
     }else if (isParamIDAR(command,token,DESTINATION)) {
       ERROR = 1;
     }else{
-
+        if(!addUndefined(token)){
+            return 0;
+        }
       command->command.destar = DIRECT_ADDRESS_RESOLUTION;
       codewords.array[codewords.numberOfWords] = arg;
       codewords.numberOfWords++;
@@ -745,7 +767,7 @@ int isParamIDAR(Word *command,char* token,int location){
   int const NUMBEROFSTRUCTURE = 3;
   char idarStructure[] = {'[','-',']'};
   int i = 0;
-  int symbEnd;
+  int symbEnd = 0;
   while (i<strlen(token)) {
     if (!(structureIndex<NUMBEROFSTRUCTURE)) {
       break;
@@ -760,12 +782,19 @@ int isParamIDAR(Word *command,char* token,int location){
     i++;
   }
   if(symbEnd>0){
-    Undefined *und;
-    und = (Undefined*)malloc(sizeof(Undefined));
-    checkUndSize(und);
-    memcpy(und->name,token,symbEnd);
-    und->name[symbEnd+1] = '\0';
-    printf("> DEBAG 764: %s \n",und->name);
+    Undefined und;
+    und.size = 0;
+    und.numberOfShows = 0;
+    und.shows = NULL;
+    und.name = NULL;
+    checkUndSize(&und);
+    memcpy(und.name,token,symbEnd);
+    und.name[symbEnd+1] = '\0';
+    und.shows[und.numberOfShows] = lineNumber;
+    und.numberOfShows++;
+    unds.array[unds.numberOfUnd] = und;
+    unds.numberOfUnd++;
+    printf("> DEBAG 764: %s \n",und.name);
   }
   if (structureIndex==NUMBEROFSTRUCTURE) {
     if(location == SOURCE){
@@ -800,13 +829,15 @@ int checkSymboleSize(){
 /*check Undefined item*/
 int checkUndSize(Undefined *und){
   if (!(und->name)) {
-    und->name = (char*)malloc(kMAX_SYMBOLE_NAME_SIZE*sizeof(char));
+      if(!(und->name = (char*)malloc(kMAX_SYMBOLE_NAME_SIZE*sizeof(char)))){
+          return 0;
+      }
   }
 	if (und->size<=(und->numberOfShows+3)) {
 
     und->size += 3;
     /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
-    if ((und->shows = (int*)realloc(und->shows, sizeof(int)*und->size))==NULL) {
+    if ((und->shows = (int*)realloc(und->shows, (und->size)*sizeof(int)))==NULL) {
       /* code */
       printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
@@ -836,21 +867,43 @@ int checkUndsSize(Undefineds *und){
 }
 int addUndefined(char *token){
   int i = 0;
-  Undefined *undPtr;
+  Undefined und;
   while (i<unds.numberOfUnd) {
+      /*Trying to fined more of 
+       */
     if(!strcmp(token,unds.array[i].name)){
       checkUndSize(&unds.array[i]);
       unds.array[i].shows[unds.array[i].numberOfShows] = lineNumber;
       unds.array[i].numberOfShows++;
       return 1;
     }
+      i++;
   }
-  undPtr = (Undefined*)malloc(sizeof(Undefined));
-  checkUndSize(undPtr);
-  strcpy(undPtr->name,token);
-  unds.array[unds.numberOfUnd] = *undPtr;
+  und.size = 0;
+  und.numberOfShows = 0;
+  und.shows = NULL;
+  und.name = NULL;
+  checkUndSize(&und);
+  strcpy(und.name,token);
+    und.shows[und.numberOfShows] = lineNumber;
+    und.numberOfShows++;
+  unds.array[unds.numberOfUnd] = und;
   unds.numberOfUnd++;
   return 1;
+}
+
+void printUndefineds(){
+    int i;
+    printf("----------------UNDIFINEDS--------------\n");
+    for (i=0; unds.numberOfUnd>i; i++) {
+        int j;
+        printf("The Undefined: '%s' has %d shows in lines: ",unds.array[i].name, unds.array[i].numberOfShows);
+        for (j = 0; j<unds.array[i].numberOfShows; j++) {
+            printf("%d, ",unds.array[i].shows[j]);
+        }
+        printf("\n");
+    }
+    printf("--------------------------------------\n");
 }
 /*int checkSrcParam(Word *command,char* token){
 

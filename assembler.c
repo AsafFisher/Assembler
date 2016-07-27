@@ -41,5 +41,6 @@ int firstEntry(FILE* input){
 
 	}
 	printArr();
+    printUndefineds();
 	return 1;
 }

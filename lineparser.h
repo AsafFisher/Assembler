@@ -1,14 +1,15 @@
 #include "protocols.h"
 /*Instruction counter*/
-int IC;
+/*int IC;*/
 
 /*Data counter*/
-int DC;
+/*int DC;*/
 int parseLine(char* line, int lineNumber);
 void printArr(void);
+void printUndefineds(void);
 
 
-typedef enum{ACTION = 0,INSTRUCTION}Type;
+typedef enum{ACTIONT = 0,INSTRUCTION}Type;
 typedef struct{
   char* name;
   Word address;
