@@ -4,7 +4,7 @@ typedef union Word{
 	/*Binary structure: 15 bits basic cell*/
 	struct{
 		unsigned int cell:15;
-	}word;
+	}fullword;
 
 	/*Binary structure: |DUMY|GRP|OPCODE|SRCAR|DESTAR|ERA|*/
 	struct{

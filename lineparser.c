@@ -90,7 +90,7 @@ if(!checkUndsSize(&unds)){
     if (hasSymbole) {
       /* Symbole exist: */
       symbole.type = INSTRUCTION;
-      symbole.address.word.cell = datawords.numberOfWords;
+      symbole.address.fullword.cell = datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -113,7 +113,7 @@ if(!checkUndsSize(&unds)){
     /* code */
     if (hasSymbole) {
       symbole.type = INSTRUCTION;
-      symbole.address.word.cell = datawords.numberOfWords;
+      symbole.address.fullword.cell = datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -136,7 +136,7 @@ if(!checkUndsSize(&unds)){
   if (!strcmp(token, EXTERN)) {
     if (hasSymbole) {
       symbole.type = INSTRUCTION;
-      symbole.address.word.cell = 0;
+      symbole.address.fullword.cell = 0;
       symbole.isExternal = 1;
       addSymbole(symbole);
       return 1;
@@ -150,7 +150,7 @@ if(!checkUndsSize(&unds)){
 
   if(hasSymbole){
     symbole.type = ACTIONT;
-    symbole.address.word.cell = codewords.numberOfWords;
+    symbole.address.fullword.cell = codewords.numberOfWords;
     symbole.isExternal = true;
     addSymbole(symbole);
   }
@@ -295,7 +295,7 @@ int updateDataToMemory(char* token){
       return 0;
     }
     datawords.array[datawords.numberOfWords] = value;
-    printf("> The value %d was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].word.cell,datawords.numberOfWords );
+    printf("> The value %d was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].fullword.cell,datawords.numberOfWords );
     token = strtok(NULL,", \n");
     datawords.numberOfWords++;
   }
@@ -358,7 +358,7 @@ int updateStringToMemory(char* token){
         return 0;
       }
       datawords.array[datawords.numberOfWords] = val;
-      printf("> The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].word.cell,datawords.array[datawords.numberOfWords].word.cell,datawords.numberOfWords );
+      printf("> The value %c (%d) was added to DATAWORDS on place:%d \n",datawords.array[datawords.numberOfWords].fullword.cell,datawords.array[datawords.numberOfWords].fullword.cell,datawords.numberOfWords );
       i++;
       datawords.numberOfWords++;
     }
@@ -476,6 +476,7 @@ int setUpCommandParams(Word* command,char *token){
   /*INSTANT_DYNAMIC_ADRESS_RESOLUTION structure...*/
   Word arg;
   int ERROR = 0;
+  arg = createInstanceOfWord();
   printf("> PARAMS: '%s'\n",token);
   printf("> DEBAG 464: %d\n",command->command.opcode );
 	switch (command->command.opcode) {
@@ -711,7 +712,7 @@ int setUpCommandParams(Word* command,char *token){
 
 }
 int isParamIAR(Word *command,char* token,int location){
-  Word arg;
+  Word arg = createInstanceOfWord();
   if(token[0] == '#'){
     if(location == SOURCE){
       command->command.srcar = INSTANT_ADDRESS_RESOLUTION;
@@ -729,7 +730,7 @@ int isParamIAR(Word *command,char* token,int location){
   return 0;
 }
 int isParamDRAR(Word *command,char* token,int location){
-  Word arg;
+  Word arg = createInstanceOfWord();
   int i = 0;
 
   while (i < REGISTERS_NUMER) {
@@ -744,7 +745,7 @@ int isParamDRAR(Word *command,char* token,int location){
         if ((command->command.grp == TWOP)&&(command->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
           codewords.array[codewords.numberOfWords-1].paddress.dest = i;
         }else{
-          arg.paddress.src = i;
+          arg.paddress.dest = i;
           codewords.array[codewords.numberOfWords] = arg;
           codewords.numberOfWords++;
         }
@@ -760,7 +761,7 @@ int isParamDRAR(Word *command,char* token,int location){
 
 }
 int isParamIDAR(Word *command,char* token,int location){
-  Word arg;
+  Word arg = createInstanceOfWord();
   int structureIndex = 0;
   int const NUMBEROFSTRUCTURE = 3;
   char idarStructure[] = {'[','-',']'};

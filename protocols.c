@@ -4,12 +4,12 @@
 #define DUMMY 5
 Word createInstanceOfWordWithParam(Word word){
 	Word ref;
-	ref.word.cell = word.word.cell;
+	ref.fullword.cell = word.fullword.cell;
 	return ref;
 }
 Word createInstanceOfWord(){
 	Word ref;
-	ref.word.cell = 0;
+	ref.fullword.cell = 0;
 	return ref;
 
 }
@@ -110,10 +110,10 @@ Word createInstaceOfParameterValue(){
 int setWordValue(Word *word, int value){
 	printf("TESTWORKS");
 	if(value>((1<<16) - 1)){
-		printf("Value:'%d'is too big.\n",(int)word->word.cell );
+		printf("Value:'%d'is too big.\n",(int)word->fullword.cell );
 		return 0;
 	}
-	word->word.cell = value;
+	word->fullword.cell = value;
 	return 1;
 }
 
@@ -156,7 +156,6 @@ void printInstructionsArray(Words *words){
 				case ONEOP:
 				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, ~SRCAR~: %d, DESTAR: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
-				printf("DEBAG > 152: %d\n",words->array[i].pvalue.value );
 				if(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION){
 					printf("PARAMETERS (%d) > ~SRC~: %d DESTINATION: %d\n",i, words->array[i].paddress.src,words->array[i].paddress.dest);
 				}else{
