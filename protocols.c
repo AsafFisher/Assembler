@@ -13,7 +13,7 @@ Word createInstanceOfWord(){
 	return ref;
 
 }
-Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode,int pgrp){
+Word createInstaceOfCommandWithParam(unsigned int pERA,unsigned int pdestar,unsigned int psrcar,unsigned int popcode,unsigned int pgrp){
 	Word word;
 	/*101 b = 5*/
 	word.command.dumy = DUMMY;
@@ -24,57 +24,60 @@ Word createInstaceOfCommandWithParam(int pERA,int pdestar,int psrcar,int popcode
 	word.command.grp = pgrp;
 	return word;
 }
-Word createInstaceOfCommand(int action){
+Word createInstaceOfCommand(unsigned int action){
 	Word word;
 	switch (action) {
 		case mov:
-		word.command.grp = TWOP;
-		break;
+			word.command.grp = TWOP;
+			break;
 		case cmp:
-		word.command.grp = TWOP;
-		break;
+			word.command.grp = TWOP;
+			break;
 		case add:
-		word.command.grp = TWOP;
-		break;
+			word.command.grp = TWOP;
+			break;
 		case sub:
-		word.command.grp = TWOP;
-		break;
+			word.command.grp = TWOP;
+			break;
 		case nt:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case clr:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case lea:
-		word.command.grp = TWOP;
-		break;
+			word.command.grp = TWOP;
+			break;
 		case inc:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case dec:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case jmp:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case bne:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case red:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case prn:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case jsr:
-		word.command.grp = ONEOP;
-		break;
+			word.command.grp = ONEOP;
+			break;
 		case rts:
-		word.command.grp = NOP;
-		break;
+			word.command.grp = NOP;
+			break;
 		case stop:
-		word.command.grp = NOP;
-		break;
+			word.command.grp = NOP;
+			break;
+		default:
+			word.command.grp = NOP;
+			break;
 
 	}
 	word.command.opcode = action;
@@ -82,7 +85,7 @@ Word createInstaceOfCommand(int action){
 	return word;
 }
 
-Word createInstaceOfParameterAdrressWithParam(int pERA,int src,int dest){
+Word createInstaceOfParameterAdrressWithParam(unsigned int pERA, unsigned int src, unsigned int dest){
 	Word word;
 	word.paddress.dumy = 0;
 	word.paddress.ERA = pERA;
@@ -95,7 +98,7 @@ Word createInstaceOfParameterAdrress(){
 	word.paddress.dumy = 0;
 	return word;
 }
-Word createInstaceOfParameterValueWithParam(int pERA,int pvalue){
+Word createInstaceOfParameterValueWithParam(unsigned int pERA, unsigned int pvalue){
 	Word word;
 	word.pvalue.ERA = pERA;
 	word.pvalue.value = pvalue;
@@ -107,7 +110,7 @@ Word createInstaceOfParameterValue(){
 	return word;
 }
 
-int setWordValue(Word *word, int value){
+int setWordValue(Word *word, unsigned int value){
 	printf("TESTWORKS");
 	if(value>((1<<16) - 1)){
 		printf("Value:'%d'is too big.\n",(int)word->fullword.cell );
@@ -119,23 +122,23 @@ int setWordValue(Word *word, int value){
 
 int checkSize(Words *words){
 	if (words->size<=(words->numberOfWords+5)) {
-    /* code */
+		/* code */
 
-    words->size += 10;
-    /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
-    if ((words->array = realloc(words->array, sizeof(Word)*words->size))==NULL) {
-      /* code */
-      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+		words->size += 10;
+		/*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
+		if ((words->array = realloc(words->array, sizeof(Word)*words->size))==NULL) {
+			/* code */
+			printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
-    }
+		}
 		if ((words->lines = realloc(words->lines, sizeof(int)*words->size))==NULL) {
-      /* code */
-      printf(">    ERROR NOT ENOGH SPACE!!!\n");
+			/* code */
+			printf(">    ERROR NOT ENOGH SPACE!!!\n");
 			return 0;
-    }
-    printf(">   ARRAY RESIZED!\n");
+		}
+		printf(">   ARRAY RESIZED!\n");
 		return 1;
-  }
+	}
 	return 1;
 
 }
@@ -148,12 +151,12 @@ void printInstructionsArray(Words *words){
 		int currentLine;
 		currentWord = words->array[i];
 		currentLine = words->lines[i];
-			switch (currentWord.command.grp) {
-				case NOP:
+		switch (currentWord.command.grp) {
+			case NOP:
 				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, ~SRCAR~: %d, ~DESTAR~: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
 				break;
-				case ONEOP:
+			case ONEOP:
 				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, ~SRCAR~: %d, DESTAR: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
 				if(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION){
@@ -164,7 +167,7 @@ void printInstructionsArray(Words *words){
 
 				i++;
 				break;
-				case TWOP:
+			case TWOP:
 				printf("COMMAND (%d) > LINE: %d GROUP: %d, OPCODE: %d, SRCAR: %d, DESTAR: %d\n",i,currentLine,currentWord.command.grp, currentWord.command.opcode, currentWord.command.srcar, currentWord.command.destar);
 				i++;
 				if ((currentWord.command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION)&&(currentWord.command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION)) {
@@ -188,7 +191,9 @@ void printInstructionsArray(Words *words){
 
 				}
 				break;
-			}
+			default:
+				break;
+		}
 	}
 
 

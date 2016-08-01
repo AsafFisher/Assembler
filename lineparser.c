@@ -90,7 +90,7 @@ if(!checkUndsSize(&unds)){
     if (hasSymbole) {
       /* Symbole exist: */
       symbole.type = INSTRUCTION;
-      symbole.address.fullword.cell = datawords.numberOfWords;
+      symbole.address.fullword.cell = (unsigned int)datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -113,7 +113,7 @@ if(!checkUndsSize(&unds)){
     /* code */
     if (hasSymbole) {
       symbole.type = INSTRUCTION;
-      symbole.address.fullword.cell = datawords.numberOfWords;
+      symbole.address.fullword.cell = (unsigned int)datawords.numberOfWords;
       symbole.isExternal = 0;
       if(!addSymbole(symbole)){
         /*ERROR!*/
@@ -121,9 +121,7 @@ if(!checkUndsSize(&unds)){
       }
     }
 
-    /*TODO: Built update memory.
-    Problem: No way to detect ints.
-    */
+    /*update memory.*/
     token = strtok(NULL,"\t");
     if(!updateStringToMemory(token)){
       /*Error Saving data.*/
@@ -150,7 +148,7 @@ if(!checkUndsSize(&unds)){
 
   if(hasSymbole){
     symbole.type = ACTIONT;
-    symbole.address.fullword.cell = codewords.numberOfWords;
+    symbole.address.fullword.cell = (unsigned int)codewords.numberOfWords;
     symbole.isExternal = true;
     addSymbole(symbole);
   }
@@ -178,7 +176,7 @@ if(!checkUndsSize(&unds)){
     /* ERROR ALLOCATING SPACE! */
     return 0;
   }
-  word = createInstaceOfCommand(actionID);
+  word = createInstaceOfCommand((unsigned int)actionID);
   /*codewords.array[IC] = word;*/
 
 
@@ -275,7 +273,7 @@ int updateDataToMemory(char* token){
 
     while (i<strlen(token)) {
       /* code */
-      if (!(isdigit(token[i]))&&!(token[i]=='-')&&!(token[i]=='+')) {
+      if (!(isdigit(token[i]))&&(token[i]!='-')&&(token[i]!='+')) {
         /* code */
         printf("> ERROR: '%s' is invalid value!\n",token );
         return 0;
@@ -290,7 +288,7 @@ int updateDataToMemory(char* token){
       return 0;
     }
     printf("DATA value: %d\n",(int)digitVal );
-    if(!setWordValue(&value,digitVal)){
+    if(!setWordValue(&value,(unsigned int)digitVal)){
       /*ERROR VALUE TOO BIG*/
       return 0;
     }
@@ -353,7 +351,7 @@ int updateStringToMemory(char* token){
 
         return 0;
       }
-      if(!setWordValue(&val,token[i])){
+      if(!setWordValue(&val,(unsigned int)token[i])){
         /*ERROR VALUE TOO BIG*/
         return 0;
       }
@@ -468,6 +466,8 @@ int updateCommandParamToMemory(Word command,char* token){
 
 
     return 1;
+    default:
+      break;
   }
   return 0;
 }
@@ -708,8 +708,6 @@ int setUpCommandParams(Word* command,char *token){
     return 1;
 
 	}
-  return 1;
-
 }
 int isParamIAR(Word *command,char* token,int location){
   Word arg = createInstanceOfWord();
@@ -720,7 +718,7 @@ int isParamIAR(Word *command,char* token,int location){
     if(location == DESTINATION){
       command->command.destar = INSTANT_ADDRESS_RESOLUTION;
     }
-    arg.pvalue.value = strtol(token+1,NULL, 10);
+    arg.pvalue.value = (int)strtol(token+1,NULL, 10);
     codewords.array[codewords.numberOfWords] = arg;
     codewords.numberOfWords++;
     printf("Argument: '%d' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[codewords.numberOfWords-2].command.opcode,codewords.array[codewords.numberOfWords-2].command.srcar );
@@ -768,7 +766,7 @@ int isParamIDAR(Word *command,char* token,int location){
   int i = 0;
   int symbEnd = 0;
   while (i<strlen(token)) {
-    if (!(structureIndex<NUMBEROFSTRUCTURE)) {
+    if (structureIndex>=NUMBEROFSTRUCTURE) {
       break;
     }
     if (token[i]==idarStructure[structureIndex]) {
