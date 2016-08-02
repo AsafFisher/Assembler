@@ -16,12 +16,12 @@ typedef struct{
   int isExternal;
   Type type;
 
-}Symbole;
+}Symbol;
 typedef struct{
-  Symbole* array;
-  int numberOfSymboles;
+  Symbol* array;
+  int numberOfSymbols;
   int size;
-}Symboles;
+}Symbols;
 
 typedef struct{
   char* name;

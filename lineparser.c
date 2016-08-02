@@ -9,7 +9,7 @@ char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 #define REGISTERS_NUMER 8
 #define SOURCE 0
 #define DESTINATION 1
-#define kMAX_SYMBOLE_NAME_SIZE 20
+#define kMAX_SYMBOL_NAME_SIZE 20
 #define DATA ".data"
 #define STRING ".string"
 #define EXTERN ".extern"
@@ -17,10 +17,10 @@ char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7‬‬"};
 enum{false = 0,true};
 Words codewords;
 Words datawords;
-Symboles symboles;
+Symbols symbols;
 Undefineds unds;
 int lineNumber;
-int addSymbole(Symbole symbole);
+int addSymbol(Symbol symbol);
 int updateDataToMemory(char* token);
 int updateStringToMemory(char* token);
 int updateCommandParamToMemory(Word command, char* token);
@@ -37,7 +37,7 @@ int isParamDRAR(Word *command,char* token, int location);
 /*Check if param is INSTANT_DYNAMIC_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
 int isParamIDAR(Word *command,char* token, int location);
 int addUndefined(char *token);
-int checkSymboleSize();
+int checkSymbolSize();
 int checkUndSize(Undefined *und);
 int checkUndsSize(Undefineds *und);
 
@@ -45,13 +45,13 @@ int checkUndsSize(Undefineds *und);
 
 
 int parseLine(char* buff,int number){
-  Symbole symbole;
+  Symbol symbol;
   char *token;
-  int hasSymbole;
+  int hasSymbol;
   int actionID = 0;
   int wasFound;
   Word word;
-  hasSymbole = false;
+  hasSymbol = false;
   lineNumber = number;
 
   if (!checkSize(&codewords)) {
@@ -77,22 +77,22 @@ if(!checkUndsSize(&unds)){
     /* code */
 
     /*Remove the : from the Symbole*/
-    hasSymbole = true;
+    hasSymbol = true;
     token[strlen(token)-1] = '\0';
-    symbole.name = malloc(strlen(token)+1);
-    strcpy(symbole.name,token);
+    symbol.name = malloc(strlen(token)+1);
+    strcpy(symbol.name,token);
     token = strtok(NULL," \n");
   }
 
-  /*-------------------Detect DATA numbers and store them + detect data Symboles-------------------------*/
+  /*-------------------Detect DATA numbers and store them + detect data Symbols-------------------------*/
   if (!strcmp(token, DATA)) {
     /* code */
-    if (hasSymbole) {
+    if (hasSymbol) {
       /* Symbole exist: */
-      symbole.type = INSTRUCTION;
-      symbole.address.fullword.cell = (unsigned int)datawords.numberOfWords;
-      symbole.isExternal = 0;
-      if(!addSymbole(symbole)){
+      symbol.type = INSTRUCTION;
+      symbol.address.fullword.cell = (unsigned int)datawords.numberOfWords;
+      symbol.isExternal = 0;
+      if(!addSymbol(symbol)){
         /*ERROR!*/
         return 0;
       }
@@ -108,14 +108,14 @@ if(!checkUndsSize(&unds)){
   }
   /*--------------------------------------------------------------------------------*/
 
-  /*Detect String data store them + Detect lables/Symboles.*/
+  /*Detect String data store them + Detect lables/Symbols.*/
   if (!strcmp(token, STRING)) {
     /* code */
-    if (hasSymbole) {
-      symbole.type = INSTRUCTION;
-      symbole.address.fullword.cell = (unsigned int)datawords.numberOfWords;
-      symbole.isExternal = 0;
-      if(!addSymbole(symbole)){
+    if (hasSymbol) {
+      symbol.type = INSTRUCTION;
+      symbol.address.fullword.cell = (unsigned int)datawords.numberOfWords;
+      symbol.isExternal = 0;
+      if(!addSymbol(symbol)){
         /*ERROR!*/
         return 0;
       }
@@ -132,11 +132,11 @@ if(!checkUndsSize(&unds)){
   }
 
   if (!strcmp(token, EXTERN)) {
-    if (hasSymbole) {
-      symbole.type = INSTRUCTION;
-      symbole.address.fullword.cell = 0;
-      symbole.isExternal = 1;
-      addSymbole(symbole);
+    if (hasSymbol) {
+      symbol.type = INSTRUCTION;
+      symbol.address.fullword.cell = 0;
+      symbol.isExternal = 1;
+      addSymbol(symbol);
       return 1;
     }
 
@@ -146,11 +146,11 @@ if(!checkUndsSize(&unds)){
     return 1;
   }
 
-  if(hasSymbole){
-    symbole.type = ACTIONT;
-    symbole.address.fullword.cell = (unsigned int)codewords.numberOfWords;
-    symbole.isExternal = true;
-    addSymbole(symbole);
+  if(hasSymbol){
+    symbol.type = ACTIONT;
+    symbol.address.fullword.cell = (unsigned int)codewords.numberOfWords;
+    symbol.isExternal = true;
+    addSymbol(symbol);
   }
 
   wasFound = false;
@@ -233,30 +233,27 @@ if(!checkUndsSize(&unds)){
 return 1;
 
 }
-int addSymbole(Symbole symbole){
+int addSymbol(Symbol symbol){
   int i = 0;
-  /*if(symboles.size == 0){
-    symboles.size += 10;
-    symboles.symboles = malloc(symboles.size);
-  }*/
-  if(!checkSymboleSize()){
+
+  if(!checkSymbolSize()){
     return 0;
   }
 
 
-  while (i<symboles.numberOfSymboles) {
+  while (i<symbols.numberOfSymbols) {
     /* code */
-    if(!strcmp(symboles.array[i].name,symbole.name)){
+    if(!strcmp(symbols.array[i].name,symbol.name)){
     /*-------------------ERROR: Multiple declearation!----------------------*/
-      printf("> ERROR: duplicate declearation: %s\n",symbole.name);
+      printf("> ERROR: duplicate declearation: %s\n",symbol.name);
       return 0;
     }
     i++;
   }
-  symboles.array[symboles.numberOfSymboles] = symbole;
-  printf("> numberOfSymboles: %d\n",symboles.numberOfSymboles);
-  printf("> Added: '%s' to Symboles\n",symboles.array[symboles.numberOfSymboles].name);
-  symboles.numberOfSymboles++;
+  symbols.array[symbols.numberOfSymbols] = symbol;
+  printf("> numberOfSymboles: %d\n",symbols.numberOfSymbols);
+  printf("> Added: '%s' to Symbols\n",symbols.array[symbols.numberOfSymbols].name);
+  symbols.numberOfSymbols++;
   return 1;
 }
 int updateDataToMemory(char* token){
@@ -792,7 +789,7 @@ int isParamIDAR(Word *command,char* token,int location){
     und.name = NULL;
     checkUndSize(&und);
     memcpy(und.name,token,symbEnd);
-    und.name[symbEnd+1] = '\0';
+    und.name[symbEnd] = '\0';
     und.shows[und.numberOfShows] = lineNumber;
     und.numberOfShows++;
     unds.array[unds.numberOfUnd] = und;
@@ -816,11 +813,11 @@ int isParamIDAR(Word *command,char* token,int location){
 void printArr() {
   printInstructionsArray(&codewords);
 }
-int checkSymboleSize(){
-  if (symboles.size <= symboles.numberOfSymboles+2) {
+int checkSymbolSize(){
+  if (symbols.size <= symbols.numberOfSymbols+2) {
     /* code */
-    symboles.size += 10;
-    if((symboles.array = realloc(symboles.array,sizeof(Symbole)*symboles.size))==NULL){
+    symbols.size += 10;
+    if((symbols.array = realloc(symbols.array,sizeof(Symbol)*symbols.size))==NULL){
       printf("> ERROR! not enogh space\n");
       return 0;
     }
@@ -832,7 +829,7 @@ int checkSymboleSize(){
 /*check Undefined item*/
 int checkUndSize(Undefined *und){
   if (!(und->name)) {
-      if(!(und->name = (char*)malloc(kMAX_SYMBOLE_NAME_SIZE*sizeof(char)))){
+      if(!(und->name = (char*)malloc(kMAX_SYMBOL_NAME_SIZE*sizeof(char)))){
           return 0;
       }
   }
@@ -908,54 +905,3 @@ void printUndefineds(){
     }
     printf("--------------------------------------\n");
 }
-/*int checkSrcParam(Word *command,char* token){
-
-  Word arg;
-  int i = 0;
-  int structureIndex = 0;
-  char idarStructure[] = {'[','-',']'};
-  int const NUMBEROFSTRUCTURE = 3;
-
-  printf("Token: '%s'\n",token );*/
-  /*Check if token contain string.*/
-  /*if (strlen(token)==0) {
-    printf("> ERROR: No token was entered!\n");
-    return 0;
-  }*/
-  /*Check if first parameter is a register...*/
-  /*if(token[0] == '#'){
-    command->command.srcar = INSTANT_ADDRESS_RESOLUTION;
-    arg.pvalue.value = strtol(token+1,NULL, 10);
-    codewords.array[IC] = arg;
-    IC++;
-    printf("Argument: '%u' CommandId: '%u' Command source address resolution: '%u' \n",arg.pvalue.value,codewords.array[IC-2].command.opcode,codewords.array[IC-2].command.srcar );
-    return 1;
-  }*/
-  /*while (i < REGISTERS_NUMER) {
-    if (!strcmp(registers[i],token)) {
-      command->command.srcar = DIRECT_REGISTER_ADDRESS_RESOLUTION;
-      arg.paddress.src = i;
-      codewords.array[IC] = arg;
-      IC++;
-      return 1;
-    }
-  }*/
-  /*Check if token is K[x - y ] structured.*/
-  /*i = 0;
-  while (i<strlen(token)&&structureIndex<NUMBEROFSTRUCTURE) {
-    if (token[i]==idarStructure[structureIndex]) {
-      structureIndex++;
-    }
-    i++;
-  }
-  if (structureIndex==NUMBEROFSTRUCTURE) {
-    command->command.srcar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
-    IC++;
-    return 1;
-  }*/
-  /*
-  command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
-  codewords.array[IC] = arg;
-  IC++;
-  return 1;
-}*/
