@@ -535,8 +535,14 @@ int setUpCommandParams(Word* command,char *token){
 		return !ERROR;
 		case mov:
 		case add:
-		case sub:
+        case sub:
     /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
+          /*TODO: Check validations! Such as:
+           * "K[2-4] asd, LENGTH" - INVALID
+           * "ab dv, askd" - INVALID
+           * "asdas    , sdsd a" - INVALID
+           * "asdasdas    ,      fsdfsdf " - VALID! <-----------
+           * */
     if ((token = strtok(token," ,"))==NULL) {
       printf("> ERROR 517: '%s'\n",token );
       return 0;
