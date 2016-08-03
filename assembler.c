@@ -42,5 +42,6 @@ int firstEntry(FILE* input){
 	}
 	printArr();
     printUndefineds();
+    printSymbols();
 	return 1;
 }

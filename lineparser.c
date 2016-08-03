@@ -91,7 +91,7 @@ if(!checkUndsSize(&unds)){
       /* Symbole exist: */
       symbol.type = INSTRUCTION;
       symbol.address.fullword.cell = (unsigned int)datawords.numberOfWords;
-      symbol.isExternal = 0;
+      symbol.isExternal = false;
       if(!addSymbol(symbol)){
         /*ERROR!*/
         return 0;
@@ -114,7 +114,7 @@ if(!checkUndsSize(&unds)){
     if (hasSymbol) {
       symbol.type = INSTRUCTION;
       symbol.address.fullword.cell = (unsigned int)datawords.numberOfWords;
-      symbol.isExternal = 0;
+      symbol.isExternal = false;
       if(!addSymbol(symbol)){
         /*ERROR!*/
         return 0;
@@ -135,10 +135,22 @@ if(!checkUndsSize(&unds)){
     if (hasSymbol) {
       symbol.type = INSTRUCTION;
       symbol.address.fullword.cell = 0;
-      symbol.isExternal = 1;
+      symbol.isExternal = true;
       addSymbol(symbol);
       return 1;
     }
+
+      if((token = strtok(NULL,"\n"))!=NULL){
+          symbol.name = malloc(strlen(token)+1);
+          strcpy(symbol.name,token);
+          symbol.type = INSTRUCTION;
+          symbol.address.fullword.cell = 0;
+          symbol.isExternal = true;
+          /*TODO: CHECK IF SYMBOL RETURN 0 IF SYMBOL NOT FOUND.*/
+          addSymbol(symbol);
+          return 1;
+      }
+
 
   }
   if (!strcmp(token, ENTRY)) {
@@ -149,7 +161,7 @@ if(!checkUndsSize(&unds)){
   if(hasSymbol){
     symbol.type = ACTIONT;
     symbol.address.fullword.cell = (unsigned int)codewords.numberOfWords;
-    symbol.isExternal = true;
+    symbol.isExternal = false;
     addSymbol(symbol);
   }
 
@@ -901,6 +913,16 @@ void printUndefineds(){
         for (j = 0; j<unds.array[i].numberOfShows; j++) {
             printf("%d, ",unds.array[i].shows[j]);
         }
+        printf("\n");
+    }
+    printf("--------------------------------------\n");
+}
+void printSymbols(void){
+    int i;
+    printf("----------------UNDIFINEDS--------------\n");
+    for (i=0; symbols.numberOfSymbols>i; i++) {
+        int j;
+        printf("The Symbol: '%s' has an address of: '%u' isExternal = '%d' Type: '%d' ",symbols.array[i].name, symbols.array[i].address.fullword.cell,symbols.array[i].isExternal,symbols.array[i].type);
         printf("\n");
     }
     printf("--------------------------------------\n");

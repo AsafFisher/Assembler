@@ -1,12 +1,8 @@
 #include "protocols.h"
-/*Instruction counter*/
-/*int IC;*/
-
-/*Data counter*/
-/*int DC;*/
 int parseLine(char* line, int lineNumber);
 void printArr(void);
 void printUndefineds(void);
+void printSymbols(void);
 
 
 typedef enum{ACTIONT = 0,INSTRUCTION}Type;
