@@ -4,6 +4,7 @@
 
 #define LINE_MAX 80
 int firstEntry(FILE* input);
+int secondEntry(FILE* input);
 int main(int argc, const char * argv[]){
 	int i;
 	FILE *fi;
@@ -18,12 +19,18 @@ int main(int argc, const char * argv[]){
 			continue;
 		}
 		rewind(fi);
+        if(!secondEntry(fi)){
+            continue;
+        }
 
 	}
 	return 0;
 
 }
 
+int secondEntry(FILE* file){
+    /*variableLinker(file);*/
+}
 int firstEntry(FILE* input){
 	int lineNumber = 1;
 
@@ -35,9 +42,6 @@ int firstEntry(FILE* input){
 			break;
 		}
 		lineNumber++;
-
-
-
 
 	}
 	printArr();

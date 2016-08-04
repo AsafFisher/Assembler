@@ -1,5 +1,6 @@
 #include "protocols.h"
 int parseLine(char* line, int lineNumber);
+/*int variableLinker(FILE *file);*/
 void printArr(void);
 void printUndefineds(void);
 void printSymbols(void);
@@ -20,8 +21,12 @@ typedef struct{
 }Symbols;
 
 typedef struct{
+    int lineNumber;
+    unsigned int type;
+}Show;
+typedef struct{
   char* name;
-  int* shows;
+  Show* shows;
   int numberOfShows;
   int size;
 }Undefined;
