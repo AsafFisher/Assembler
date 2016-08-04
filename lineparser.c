@@ -290,6 +290,7 @@ int variableLinker(FILE *input) {
                         return 0;
                     }
                     break;
+                    /*TODO: FINISH Second case and Two operators*/
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
 
 
