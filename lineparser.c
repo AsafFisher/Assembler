@@ -29,6 +29,8 @@ int lineNumber;
 
 int addSymbol(Symbol symbol);
 
+int setSymbolValue(char *line, Word *location);
+
 int updateDataToMemory(char *token);
 
 int updateStringToMemory(char *token);
@@ -155,7 +157,9 @@ int parseLine(char *buff, int number) {
             symbol.type = INSTRUCTION;
             symbol.address.fullword.cell = 0;
             symbol.isExternal = true;
-            addSymbol(symbol);
+            if(!addSymbol(symbol)){
+                return 0;
+            }
             return 1;
         }
 
@@ -166,7 +170,9 @@ int parseLine(char *buff, int number) {
             symbol.address.fullword.cell = 0;
             symbol.isExternal = true;
             /*TODO: CHECK IF SYMBOL RETURN 0 IF SYMBOL NOT FOUND.*/
-            addSymbol(symbol);
+            if(!addSymbol(symbol)){
+                return 0;
+            }
             return 1;
         }
 
@@ -181,7 +187,9 @@ int parseLine(char *buff, int number) {
         symbol.type = ACTIONT;
         symbol.address.fullword.cell = (unsigned int) codewords.numberOfWords;
         symbol.isExternal = false;
-        addSymbol(symbol);
+        if(!addSymbol(symbol)){
+            return 0;
+        }
     }
 
     wasFound = false;
@@ -238,22 +246,29 @@ int parseLine(char *buff, int number) {
 }
 int variableLinker(FILE *input) {
     int commandIndex = 0;
+    int currentFileLine = 0;
     while (commandIndex < codewords.numberOfWords) {
         Word *currentWord = codewords.array + commandIndex;
-        int currentLine = codewords.lines[commandIndex];
+        int currentCommandLine = codewords.lines[commandIndex];
         char line[LINE_MAX];
-        if(fgets(line,LINE_MAX,input)==NULL){
-            return 0;
-        }
-        if (commandIndex == 0){
-            char *temp = strtok(line,":");
-            if(temp == NULL){
-                /*Continue like nothing happend.*/
-            }else{
-                temp = strtok(NULL,"\n");
-                strcpy(line,temp);
+        char *temp = NULL;
+        while(currentFileLine<currentCommandLine){
+            if(fgets(line,LINE_MAX,input)==NULL){
+                return 0;
             }
+            currentFileLine++;
         }
+
+
+        if(strstr(line,":")!=NULL)
+            temp = strtok(line, ":");
+        if(temp == NULL){
+            temp = strtok(line, "\n");
+        }else{
+            temp = strtok(NULL, "\n");
+        }
+
+        strcpy(line, temp);
         if (currentWord->command.grp == NOP) {
             /*No operators next command is right at commandIndex+1*/
             commandIndex++;
@@ -262,23 +277,17 @@ int variableLinker(FILE *input) {
             /*One operator, variable is located at commandIndex+1 next command is right at commandIndex+2*/
             int varIndex = commandIndex + 1;
             int undefinedIndex = 0;
+            strtok(line, " ");
+            temp = strtok(NULL," \n");
+            strcpy(line,temp);
+
+
             switch(currentWord->command.destar){
                 case DIRECT_ADDRESS_RESOLUTION:
                     /*Search in the */
-
-                    while(undefinedIndex<unds.numberOfUnd){
-                        if (strstr(line,unds.array[undefinedIndex].name)!=NULL){
-                            /*Undefined for this line was found.*/
-                            int j = 0;
-                            while(j<unds.array[undefinedIndex].numberOfShows){
-                                if(unds.array[undefinedIndex].shows[j].type == DIRECT_ADDRESS_RESOLUTION){
-                                    /*Found*/
-                                }else{
-
-                                }
-                            }
-                        }
-                        undefinedIndex++;
+                    if(!setSymbolValue(line,&codewords.array[varIndex])){
+                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        return 0;
                     }
                     break;
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
@@ -294,6 +303,10 @@ int variableLinker(FILE *input) {
                     break;
             }
 
+
+
+
+
             commandIndex += 2;
             continue;
         }
@@ -302,7 +315,7 @@ int variableLinker(FILE *input) {
             if (currentWord->command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION &&
                 currentWord->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION) {
                 /*No need to do anything because Registers has already been taken care of.*/
-                commandIndex++;
+                commandIndex+=2;
                 continue;
             }
             /*Two operators, variables located at commandIndex+1 second variable located at commandIndex+2 next command is at commandIndex+3*/
@@ -319,6 +332,20 @@ int variableLinker(FILE *input) {
 
 /*Code Words has a special built at */
 
+int setSymbolValue(char *param, Word *location){
+    int i = 0;
+    while(i<symbols.numberOfSymbols){
+        if(!strcmp(param,symbols.array[i].name)){
+            /*Found symbol*/
+            location->fullword.cell = symbols.array[i].address.fullword.cell;
+            return 1;
+        }
+
+        i++;
+    }
+    printf("> ERROR: variable named '%s' was never declared!\n",param);
+    return 0;
+}
 
 int addSymbol(Symbol symbol) {
     int i = 0;
