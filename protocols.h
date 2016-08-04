@@ -1,3 +1,5 @@
+#ifndef STARTIF
+#define STARTIF
 #include <string.h>
 
 typedef union Word{
@@ -65,3 +67,5 @@ Word createInstaceOfParameterValue();
 int setWordValue(Word *word, unsigned int value);
 int checkSize(Words *words);
 void printInstructionsArray(Words *words);
+
+#endif

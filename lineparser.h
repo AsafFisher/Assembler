@@ -1,6 +1,8 @@
+#ifndef LINEPARSER_H
+#define LINEPARSER_H
 #include "protocols.h"
 int parseLine(char* line, int lineNumber);
-/*int variableLinker(FILE *file);*/
+int variableLinker(FILE *file);
 void printArr(void);
 void printUndefineds(void);
 void printSymbols(void);
@@ -35,3 +37,4 @@ typedef struct{
   int numberOfUnd;
   int size;
 }Undefineds;
+#endif

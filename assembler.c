@@ -29,7 +29,7 @@ int main(int argc, const char * argv[]){
 }
 
 int secondEntry(FILE* file){
-    /*variableLinker(file);*/
+    variableLinker(file);
 }
 int firstEntry(FILE* input){
 	int lineNumber = 1;

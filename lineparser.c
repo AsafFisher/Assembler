@@ -236,6 +236,41 @@ int parseLine(char *buff, int number) {
     return 1;
 
 }
+int variableLinker(FILE *file) {
+    int commandIndex = 0;
+    while (commandIndex < codewords.numberOfWords) {
+        Word *currentWord = codewords.array + commandIndex;
+        if (currentWord->command.grp == NOP) {
+            /*No operators next command is right at commandIndex+1*/
+            commandIndex++;
+        }
+        if (currentWord->command.grp == ONEOP) {
+            /*One operator, variable is located at commandIndex+1 next command is right at commandIndex+2*/
+            int varIndex = commandIndex + 1;
+
+
+            commandIndex += 2;
+            continue;
+        }
+        if (currentWord->command.grp == TWOP) {
+            int firstVarIndex, secondVarIndex;
+            if (currentWord->command.destar == DIRECT_REGISTER_ADDRESS_RESOLUTION &&
+                currentWord->command.srcar == DIRECT_REGISTER_ADDRESS_RESOLUTION) {
+                /*No need to do anything because Registers has already been taken care of.*/
+                commandIndex++;
+                continue;
+            }
+            /*Two operators, variables located at commandIndex+1 second variable located at commandIndex+2 next command is at commandIndex+3*/
+            firstVarIndex = commandIndex + 1;
+            secondVarIndex = commandIndex + 2;
+            /*One operator next command is right at commandIndex+2*/
+            commandIndex += 3;
+            continue;
+        }
+
+    }
+
+}
 
 /*Code Words has a special built at */
 
