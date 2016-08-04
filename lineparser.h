@@ -1,5 +1,6 @@
 #ifndef LINEPARSER_H
 #define LINEPARSER_H
+#define LINE_MAX 80
 #include "protocols.h"
 int parseLine(char* line, int lineNumber);
 int variableLinker(FILE *file);

@@ -236,10 +236,24 @@ int parseLine(char *buff, int number) {
     return 1;
 
 }
-int variableLinker(FILE *file) {
+int variableLinker(FILE *input) {
     int commandIndex = 0;
     while (commandIndex < codewords.numberOfWords) {
         Word *currentWord = codewords.array + commandIndex;
+        int currentLine = codewords.lines[commandIndex];
+        char line[LINE_MAX];
+        if(fgets(line,LINE_MAX,input)==NULL){
+            return 0;
+        }
+        if (commandIndex == 0){
+            char *temp = strtok(line,":");
+            if(temp == NULL){
+                /*Continue like nothing happend.*/
+            }else{
+                temp = strtok(NULL,"\n");
+                strcpy(line,temp);
+            }
+        }
         if (currentWord->command.grp == NOP) {
             /*No operators next command is right at commandIndex+1*/
             commandIndex++;
@@ -247,7 +261,38 @@ int variableLinker(FILE *file) {
         if (currentWord->command.grp == ONEOP) {
             /*One operator, variable is located at commandIndex+1 next command is right at commandIndex+2*/
             int varIndex = commandIndex + 1;
+            int undefinedIndex = 0;
+            switch(currentWord->command.destar){
+                case DIRECT_ADDRESS_RESOLUTION:
+                    /*Search in the */
 
+                    while(undefinedIndex<unds.numberOfUnd){
+                        if (strstr(line,unds.array[undefinedIndex].name)!=NULL){
+                            /*Undefined for this line was found.*/
+                            int j = 0;
+                            while(j<unds.array[undefinedIndex].numberOfShows){
+                                if(unds.array[undefinedIndex].shows[j].type == DIRECT_ADDRESS_RESOLUTION){
+                                    /*Found*/
+                                }else{
+
+                                }
+                            }
+                        }
+                        undefinedIndex++;
+                    }
+                    break;
+                case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
+
+
+
+
+
+
+                    break;
+
+                default:
+                    break;
+            }
 
             commandIndex += 2;
             continue;

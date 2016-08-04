@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "assembler.h"
 
-#define LINE_MAX 80
 int firstEntry(FILE* input);
 int secondEntry(FILE* input);
 int main(int argc, const char * argv[]){
