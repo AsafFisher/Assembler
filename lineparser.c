@@ -1082,7 +1082,7 @@ Word cropRangeFromValue(Word value, int startBit, int endBit){
     Word newValue = createInstanceOfWord();
     int mask = ~0;
     newValue.fullword.cell = value.fullword.cell;
-    newValue.fullword.cell>>=startBit;
+    newValue.fullword.cell>>=startBit-1;
     mask<<=(endBit-startBit+1);
     mask = ~mask;
     newValue.fullword.cell&=mask;
