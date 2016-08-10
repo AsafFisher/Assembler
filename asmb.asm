@@ -1,5 +1,5 @@
 .extern A
-  inc     KAASDA
+  prn     KAASDA[1-2]
 MAIN: mov K[2-4],LENGTH
 add r2,STR
 LOOP: jmp END

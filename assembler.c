@@ -17,6 +17,9 @@ int main(int argc, const char * argv[]){
 		if(!firstEntry(fi)){
 			continue;
 		}
+        printArr();
+        printUndefineds();
+        printSymbols();
 		rewind(fi);
         if(!secondEntry(fi)){
             continue;
@@ -38,13 +41,10 @@ int firstEntry(FILE* input){
 	while(fgets(line,LINE_MAX,input)!=NULL){
 		if(!parseLine(line,lineNumber)){
 			printf("Assembler > ERROR Assembler throw exception! (LINE: %d) \nabort file!\n",lineNumber);
-			break;
+			return 0;
 		}
 		lineNumber++;
 
 	}
-	printArr();
-    printUndefineds();
-    printSymbols();
 	return 1;
 }
