@@ -111,9 +111,8 @@ Word createInstaceOfParameterValue(){
 }
 
 int setWordValue(Word *word, unsigned int value){
-	printf("TESTWORKS");
 	if(value>((1<<16) - 1)){
-		printf("Value:'%d'is too big.\n",(int)word->fullword.cell );
+		printf("Value: '%d' is too big.\n",value );
 		return 0;
 	}
 	word->fullword.cell = value;

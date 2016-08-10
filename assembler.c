@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "assembler.h"
 
+FILE *openFile(const char *name,const char *ending ,const char *mode);
 int firstEntry(FILE* input);
 int secondEntry(FILE* input);
 int main(int argc, const char * argv[]){
@@ -9,7 +10,7 @@ int main(int argc, const char * argv[]){
 	FILE *fi;
 
 	for(i=1;i<argc;i++){
-		if(!(fi = fopen(argv[i], "r"))){
+		if(!(fi = (openFile(argv[i], ".as", "r")))){
 			fprintf(stderr,"-------------------------FATAL-------------------------\n");
 			continue;
 		}
@@ -48,3 +49,19 @@ int firstEntry(FILE* input){
 	}
 	return 1;
 }
+
+FILE *openFile(const char *name,const char *ending,const char *mode)
+{
+	FILE *file;
+	char name_as[MAX_FILE_NAME];
+	strcpy(name_as,name);
+	strcat(name_as,ending);
+	file = fopen(name_as, mode);
+	return file;
+}
+
+
+
+
+
+

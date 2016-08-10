@@ -12,6 +12,6 @@ bne LOOP
 END: stop
 NAME: .string "Asaf Fisher"
 STR: .string "a bc def"
-LENGTH: .data  9,15-,6
+LENGTH: .data  9,-15,6
  KS: .data 22
    KAASDA: .data 12

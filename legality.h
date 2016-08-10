@@ -1,0 +1,1 @@
+int is_legal_line(char *buf,int line);

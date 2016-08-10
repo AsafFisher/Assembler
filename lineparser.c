@@ -5,7 +5,7 @@
 #include "lineparser.h"
 #include "protocols.h"
 #include "assembler.h"
-
+#include "legality.h"
 char *actions[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr",
                    "rts", "stop"};
 char *registers[] = {"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7‬‬"};
@@ -93,8 +93,9 @@ int parseLine(char *buff, int number) {
         /* ERROR ALLOCATING SPACE! */
         return 0;
     }
-
-
+	
+	if(!is_legal_line( buff,lineNumber))
+		return 0;
     if (!(token = strtok(buff, " \n"))) {
         return 1;
     }
