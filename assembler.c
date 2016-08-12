@@ -36,17 +36,21 @@ int secondEntry(FILE* file){
 }
 int firstEntry(FILE* input){
 	int lineNumber = 1;
-
+    int ERRORS = 0;
 
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
 		if(!parseLine(line,lineNumber)){
 			printf("Assembler > ERROR Assembler throw exception! (LINE: %d) \nabort file!\n",lineNumber);
-			return 0;
+			ERRORS++;
 		}
 		lineNumber++;
 
 	}
+    if(ERRORS>0){
+        printf("FOUND '%d' ERRORS in code.",ERRORS);
+        return 0;
+    }
 	return 1;
 }
 
