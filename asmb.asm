@@ -1,5 +1,5 @@
 .extern A
-  prn     KAASDA[1-2]
+prn     KAASDA
 MAIN: mov K[2-4],LENGTH
 add r2,STR
 LOOP: jmp END
@@ -13,5 +13,5 @@ END: stop
 NAME: .string "Asaf Fisher"
 STR: .string "a bc def"
 LENGTH: .data  9,-15,6
- KS: .data 22
-   KAASDA: .data 12
+KS: .data 22
+KAASDA: .data 12

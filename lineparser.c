@@ -323,6 +323,47 @@ int variableLinker(FILE *input) {
             firstVarIndex = commandIndex + 1;
             secondVarIndex = commandIndex + 2;
             /*One operator next command is right at commandIndex+2*/
+            strtok(line, " ");
+            temp = strtok(NULL," ,");
+            strcpy(line,temp);
+            /*Source*/
+            switch(currentWord->command.srcar){
+                case DIRECT_ADDRESS_RESOLUTION:
+                    if(!setSymbolValue(line,&codewords.array[firstVarIndex])){
+                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        return 0;
+                    }
+                    break;
+                case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
+                    if(!identifyIDARSymbol(line,&codewords.array[firstVarIndex])){
+                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        return 0;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            temp = strtok(NULL," ,\n");
+            strcpy(line,temp);
+            /*TODO: Finish debagging here.*/
+            /*Destenation*/
+            switch(currentWord->command.destar){
+                case DIRECT_ADDRESS_RESOLUTION:
+                    if(!setSymbolValue(line,&codewords.array[secondVarIndex])){
+                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        return 0;
+                    }
+                    break;
+                case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
+                    if(!identifyIDARSymbol(line,&codewords.array[secondVarIndex])){
+                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        return 0;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
             commandIndex += 3;
             continue;
         }
@@ -332,7 +373,7 @@ int variableLinker(FILE *input) {
 }
 
 /*Code Words has a special built at */
-
+/*Gets a parameter and a Word and replace the contained in the word with the Address of the symbol (return 0 if symbol does not exist)*/
 int setSymbolValue(char *param, Word *location){
     int i = 0;
     Symbol* symbol;
@@ -983,8 +1024,13 @@ int identifyIDARSymbol(char* idarStr, Word* location){
     }
     memcpy(symbolName,idarStr,endOfName);
     symbol = getSymbolByName(symbolName);
+    if(symbol == NULL){
+        printf("> ERROR: variable named '%s' was never declared!\n",symbolName);
+        return 0;
+    }
     if(symbol->type == INSTRUCTION){
         value = cropRangeFromValue(datawords.array[symbol->address.fullword.cell], from, to);
+        location->fullword.cell = value.fullword.cell;
     }
 
 
@@ -1079,7 +1125,7 @@ int addUndefined(char *token, int type) {
 }
 
 Word cropRangeFromValue(Word value, int startBit, int endBit){
-    /*TODO: Finished ended here.*/
+    /*TODO: Negative number.*/
     Word newValue = createInstanceOfWord();
     int mask = ~0;
     newValue.fullword.cell = value.fullword.cell;
