@@ -13,11 +13,15 @@ char *registers[] = {"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7‬‬"};
 #define REGISTERS_NUMER 8
 #define SOURCE 0
 #define DESTINATION 1
+
+#define MEMORY_START 100
+#define MAX_MEMORY 1000
 #define kMAX_SYMBOL_NAME_SIZE 20
 #define DATA ".data"
 #define STRING ".string"
 #define EXTERN ".extern"
 #define ENTRY ".entry"
+
 enum {
     false = 0, true
 };
@@ -39,7 +43,15 @@ int updateCommandParamToMemory(Word command, char *token);
 
 int setUpCommandParams(Word *word, char *token);
 
+int base10ToBase8(int number);
+
 int identifyIDARSymbol(char* idarStr,Word *location);
+
+char* convertToBase8();
+
+char base8Symbol(int number);
+
+int freeAll();
 
 Symbol* getSymbolByName(char* param);
 
@@ -268,7 +280,6 @@ int variableLinker(FILE *input) {
             temp = strtok(NULL, "\n");
         }
 
-        strcpy(line, temp);
         if (currentWord->command.grp == NOP) {
             /*No operators next command is right at commandIndex+1*/
             commandIndex++;
@@ -276,15 +287,14 @@ int variableLinker(FILE *input) {
         if (currentWord->command.grp == ONEOP) {
             /*One operator, variable is located at commandIndex+1 next command is right at commandIndex+2*/
             int varIndex = commandIndex + 1;
-            strtok(line, " ");
+            strtok(temp, " ");
             temp = strtok(NULL," \n");
-            strcpy(line,temp);
 
 
             switch(currentWord->command.destar){
                 case DIRECT_ADDRESS_RESOLUTION:
                     /*Search in the */
-                    if(!setSymbolValue(line,&codewords.array[varIndex])){
+                    if(!setSymbolValue(temp,&codewords.array[varIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
@@ -292,7 +302,7 @@ int variableLinker(FILE *input) {
                     /*TODO: FINISH Second case and Two operators*/
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
 
-                    if(!identifyIDARSymbol(line,&codewords.array[varIndex])){
+                    if(!identifyIDARSymbol(temp,&codewords.array[varIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
@@ -323,19 +333,18 @@ int variableLinker(FILE *input) {
             firstVarIndex = commandIndex + 1;
             secondVarIndex = commandIndex + 2;
             /*One operator next command is right at commandIndex+2*/
-            strtok(line, " ");
+            strtok(temp, " ");
             temp = strtok(NULL," ,");
-            strcpy(line,temp);
             /*Source*/
             switch(currentWord->command.srcar){
                 case DIRECT_ADDRESS_RESOLUTION:
-                    if(!setSymbolValue(line,&codewords.array[firstVarIndex])){
+                    if(!setSymbolValue(temp,&codewords.array[firstVarIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
-                    if(!identifyIDARSymbol(line,&codewords.array[firstVarIndex])){
+                    if(!identifyIDARSymbol(temp,&codewords.array[firstVarIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
@@ -344,18 +353,17 @@ int variableLinker(FILE *input) {
                     break;
             }
             temp = strtok(NULL," ,\n");
-            strcpy(line,temp);
             /*TODO: Finish debagging here.*/
             /*Destenation*/
             switch(currentWord->command.destar){
                 case DIRECT_ADDRESS_RESOLUTION:
-                    if(!setSymbolValue(line,&codewords.array[secondVarIndex])){
+                    if(!setSymbolValue(temp,&codewords.array[secondVarIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
-                    if(!identifyIDARSymbol(line,&codewords.array[secondVarIndex])){
+                    if(!identifyIDARSymbol(temp,&codewords.array[secondVarIndex])){
                         printf("> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
@@ -369,6 +377,7 @@ int variableLinker(FILE *input) {
         }
 
     }
+    return 1;
 
 }
 
@@ -381,7 +390,8 @@ int setSymbolValue(char *param, Word *location){
         printf("> ERROR: variable named '%s' was never declared!\n",param);
         return 0;
     }
-    location->fullword.cell = symbol->address.fullword.cell;
+    location->pvalue.value = symbol->address.pvalue.value+MEMORY_START+codewords.numberOfWords;
+    location->pvalue.ERA = symbol->address.pvalue.ERA;
     return 1;
 }
 /*return pointer of symbol or NULL if not found.*/
@@ -1165,4 +1175,81 @@ void printSymbols(void) {
 
 void printArr() {
     printInstructionsArray(&codewords);
+}
+char* convertToBase8(){
+    char* translated = malloc(sizeof(char)*LINE_MAX*(codewords.numberOfWords+datawords.numberOfWords));
+    int arrayIndex = 0;
+    int i = 0;
+    char base8[MAX_MEMORY];
+    int address = 100;
+    int datalength = base10ToBase8(datawords.numberOfWords);
+    int codelength = base10ToBase8(codewords.numberOfWords);
+    /*Data length format*/
+    snprintf(base8,MAX_MEMORY,datalength);
+    while(base8[i]!=NULL){
+        translated[arrayIndex] = base8Symbol(base8[i]-'0');
+        arrayIndex++;
+        i++;
+    }
+    /*Spaced*/
+    translated[arrayIndex] =' ';
+    arrayIndex++;
+    i = 0;
+    /*Code Length format*/
+    snprintf(base8,MAX_MEMORY,codelength);
+    while(base8[i]!=NULL){
+        translated[arrayIndex] = base8Symbol(base8[i]-'0');
+        arrayIndex++;
+        i++;
+    }
+    i = 0;
+    while(i<codewords.numberOfWords){
+        Word temp = createInstanceOfWord();
+        /*Address format*/
+        int addressB8 = base10ToBase8(address);
+        int addressI = 0;
+        snprintf(base8,MAX_MEMORY,addressB8);
+        while(base8[addressI]!=NULL){
+            translated[arrayIndex] = base8Symbol(base8[i]-'0');
+            addressI++;
+            arrayIndex++;
+        }
+
+    }
+}
+int base10ToBase8(int number){
+    const int base = 8;
+    int resault = 0;
+    while(number != 0){
+        resault += number%base;
+        number = number/8;
+        resault*=10;
+    }
+    return resault;
+}
+char base8Symbol(int number){
+    /* !@#$%^&* is assigned to 01234567 */
+    switch (number){
+        case 0:
+            return '!';
+        case 1:
+            return '@';
+        case 2:
+            return '#';
+        case 3:
+            return '$';
+        case 4:
+            return '%';
+        case 5:
+            return '^';
+        case 6:
+            return '&';
+        case 7:
+            return '*';
+        default:
+            return NULL;
+    }
+}
+int freeAll(){
+
 }

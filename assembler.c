@@ -25,14 +25,21 @@ int main(int argc, const char * argv[]){
         if(!secondEntry(fi)){
             continue;
         }
+        printArr();
+        convertToBase8();
 
 	}
 	return 0;
 
 }
 
+
 int secondEntry(FILE* file){
-    variableLinker(file);
+    if(!variableLinker(file)){
+        printf("Assembler > ERROR Assembler throw exception!");
+        return 0;
+    }
+    return 1;
 }
 int firstEntry(FILE* input){
 	int lineNumber = 1;

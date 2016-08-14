@@ -1,2 +1,2 @@
 #include "lineparser.h"
-#define MAX_FILE_NAME 30
+#define MAX_FILE_NAME 50
