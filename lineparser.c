@@ -115,7 +115,7 @@ int parseLine(char *buff, int number) {
         if (hasSymbol) {
             /* Symbole exist: */
             symbol.type = INSTRUCTION;
-            symbol.address.fullword.cell = (unsigned int) datawords.numberOfWords;
+            symbol.address.pvalue.value = datawords.numberOfWords;
             symbol.isExternal = false;
             if (!addSymbol(symbol)) {
                 /*ERROR!*/
@@ -138,7 +138,7 @@ int parseLine(char *buff, int number) {
         /* code */
         if (hasSymbol) {
             symbol.type = INSTRUCTION;
-            symbol.address.fullword.cell = (unsigned int) datawords.numberOfWords;
+            symbol.address.pvalue.value = datawords.numberOfWords;
             symbol.isExternal = false;
             if (!addSymbol(symbol)) {
                 /*ERROR!*/
@@ -165,7 +165,7 @@ int parseLine(char *buff, int number) {
             symbol.name = malloc(strlen(token) + 1);
             strcpy(symbol.name, token);
             symbol.type = INSTRUCTION;
-            symbol.address.fullword.cell = 0;
+            symbol.address.pvalue.value = 0;
             symbol.isExternal = true;
             /*TODO: CHECK IF SYMBOL RETURN 0 IF SYMBOL NOT FOUND.*/
             if(!addSymbol(symbol)){
@@ -184,7 +184,7 @@ int parseLine(char *buff, int number) {
 
     if (hasSymbol) {
         symbol.type = ACTIONT;
-        symbol.address.fullword.cell = (unsigned int) codewords.numberOfWords;
+        symbol.address.pvalue.value = codewords.numberOfWords;
         symbol.isExternal = false;
         if(!addSymbol(symbol)){
             return 0;
@@ -377,8 +377,11 @@ int setSymbolValue(char *param, Word *location){
         printf("> ERROR: variable named '%s' was never declared!\n",param);
         return 0;
     }
+    if(symbol->isExternal){
+        location->fullword.cell = symbol->address.fullword.cell;
+        return 1;
+    }
     location->pvalue.value = symbol->address.pvalue.value+MEMORY_START+codewords.numberOfWords;
-    location->pvalue.ERA = symbol->address.pvalue.ERA;
     return 1;
 }
 /*return pointer of symbol or NULL if not found.*/
@@ -518,12 +521,14 @@ int updateStringToMemory(char *token) {
             return 0;
         }
         datawords.array[datawords.numberOfWords] = val;
-        printf("> The value %c (%d) was added to DATAWORDS on place:%d \n",
-               datawords.array[datawords.numberOfWords].fullword.cell,
-               datawords.array[datawords.numberOfWords].fullword.cell, datawords.numberOfWords);
         i++;
         datawords.numberOfWords++;
     }
+    Word val;
+    setWordValue(&val,0);
+    datawords.array[datawords.numberOfWords] = val;
+    datawords.numberOfWords++;
+
 
     return 1;
 }
@@ -876,9 +881,6 @@ int isParamIAR(Word *command, char *token, int location) {
         arg.pvalue.value = (int) strtol(token + 1, NULL, 10);
         codewords.array[codewords.numberOfWords] = arg;
         codewords.numberOfWords++;
-        printf("Argument: '%d' CommandId: '%u' Command source address resolution: '%u' \n", arg.pvalue.value,
-               codewords.array[codewords.numberOfWords - 2].command.opcode,
-               codewords.array[codewords.numberOfWords - 2].command.srcar);
         return 1;
     }
     /*Raw number was not found.*/
@@ -995,17 +997,30 @@ int identifyIDARSymbol(char* idarStr, Word* location){
         printf("> ERROR: variable named '%s' was never declared!\n",symbolName);
         return 0;
     }
-    if(symbol->type == INSTRUCTION){
-        if(from<0&&from>=13){
-            printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
-            return 0;
-        }
-        if(to<0&&to>=13){
-            printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
-            return 0;
-        }
-        value = cropRangeFromValue(datawords.array[symbol->address.fullword.cell], from, to);
-        location->fullword.cell = value.fullword.cell;
+    switch (symbol->type){
+        case INSTRUCTION:
+            if(from<0&&from>=13){
+                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
+                return 0;
+            }
+            if(to<0&&to>=13){
+                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
+                return 0;
+            }
+            value = cropRangeFromValue(datawords.array[symbol->address.pvalue.value], from, to);
+            location->fullword.cell = value.fullword.cell;
+            return 1;
+        case ACTIONT:
+            if(from<0&&from>=13){
+                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
+                return 0;
+            }
+            if(to<0&&to>=13){
+                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
+                return 0;
+            }
+            value = cropRangeFromValue(codewords.array[symbol->address.pvalue.value], from, to);
+            location->fullword.cell = value.fullword.cell;
     }
 
 
@@ -1064,7 +1079,7 @@ void printArr() {
     printInstructionsArray(&codewords);
 }
 char* convertToBase8(){
-    char* translated = malloc(sizeof(char)*LINE_MAX*(codewords.numberOfWords+datawords.numberOfWords));
+    char* translated = calloc(LINE_MAX*(codewords.numberOfWords+datawords.numberOfWords),sizeof(char));
     int arrayIndex = 0;
     int i = 0;
     char base8[MAX_MEMORY];

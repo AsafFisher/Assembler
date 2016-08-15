@@ -2,6 +2,4 @@
 !*.c
 !*.h
 !makefile
-!asmb.as
 !*.md
-!input2.as

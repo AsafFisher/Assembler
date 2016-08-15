@@ -2,7 +2,7 @@
 .entry LENGTH
 .extern L3
 .extern W
-MAIN: mov k[2-4],W
+MAIN: mov K[2-4],W
 add r2,STR
 LOOP: jmp W
 prn #-5
@@ -13,4 +13,4 @@ bne L3
 END: stop
 STR: .string "abcdef"
 LENGTH: .data 6,-9,15
-K: .data 2
+K: .data 22

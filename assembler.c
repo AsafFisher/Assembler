@@ -36,6 +36,7 @@ int main(int argc, const char * argv[]){
         fprintf(fi,"%s",output);
         fclose(fi);
         free(output);
+        output = NULL;
         fi = NULL;
         freeAll();
 
