@@ -28,7 +28,6 @@ enum {
 Words codewords;
 Words datawords;
 Symbols symbols;
-Undefineds unds;
 int lineNumber;
 
 int addSymbol(Symbol symbol);
@@ -47,7 +46,6 @@ int base10ToBase8(int number);
 
 int identifyIDARSymbol(char* idarStr,Word *location);
 
-char* convertToBase8();
 
 char base8Symbol(int number);
 
@@ -67,13 +65,7 @@ int isParamDRAR(Word *command, char *token, int location);
 /*Check if param is INSTANT_DYNAMIC_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
 int isParamIDAR(Word *command, char *token, int location);
 
-int addUndefined(char *token, int type);
-
 int checkSymbolSize();
-
-int checkUndSize(Undefined *und);
-
-int checkUndsSize(Undefineds *und);
 
 
 
@@ -97,11 +89,6 @@ int parseLine(char *buff, int number) {
         return 0;
     }
     if (!checkSize(&datawords)) {
-        /* ERROR ALLOCATING SPACE! */
-        return 0;
-    }
-
-    if (!checkUndsSize(&unds)) {
         /* ERROR ALLOCATING SPACE! */
         return 0;
     }
@@ -667,10 +654,8 @@ int setUpCommandParams(Word *command, char *token) {
             } else if (isParamIDAR(command, token, SOURCE)) {
                 ERROR = 0;
             } else {
-                if (!addUndefined(token, SOURCE)) {
-                    return 0;
-                }
                 command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -692,10 +677,8 @@ int setUpCommandParams(Word *command, char *token) {
             } else if (isParamIDAR(command, token, DESTINATION)) {
                 ERROR = 0;
             } else {
-                if (!addUndefined(token, DESTINATION)) {
-                    return 0;
-                }
                 command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -726,10 +709,8 @@ int setUpCommandParams(Word *command, char *token) {
             } else if (isParamIDAR(command, token, SOURCE)) {
                 ERROR = 0;
             } else {
-                if (!addUndefined(token, SOURCE)) {
-                    return 0;
-                }
                 command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -753,10 +734,8 @@ int setUpCommandParams(Word *command, char *token) {
                 printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
-                if (!addUndefined(token, DESTINATION)) {
-                    return 0;
-                }
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -792,10 +771,8 @@ int setUpCommandParams(Word *command, char *token) {
                 printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
-                if (!addUndefined(token, DESTINATION)) {
-                    return 0;
-                }
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -822,10 +799,8 @@ int setUpCommandParams(Word *command, char *token) {
             } else if (isParamIDAR(command, token, DESTINATION)) {
                 ERROR = 0;
             } else {
-                if (!addUndefined(token, DESTINATION)) {
-                    return 0;
-                }
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -851,10 +826,8 @@ int setUpCommandParams(Word *command, char *token) {
                 printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
-                if (!addUndefined(token, SOURCE)) {
-                    return 0;
-                }
                 command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -878,10 +851,8 @@ int setUpCommandParams(Word *command, char *token) {
                 printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
-                if (!addUndefined(token, DESTINATION)) {
-                    return 0;
-                }
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
+                arg.paddress.ERA = RELOCATABLE;
                 codewords.array[codewords.numberOfWords] = arg;
                 codewords.numberOfWords++;
             }
@@ -916,6 +887,7 @@ int isParamIAR(Word *command, char *token, int location) {
 
 int isParamDRAR(Word *command, char *token, int location) {
     Word arg = createInstanceOfWord();
+    arg.paddress.ERA = 0;
     int i = 0;
 
     while (i < REGISTERS_NUMER) {
@@ -966,22 +938,7 @@ int isParamIDAR(Word *command, char *token, int location) {
         }
         i++;
     }
-    if (symbEnd > 0) {
-        Undefined und;
-        und.size = 0;
-        und.numberOfShows = 0;
-        und.shows = NULL;
-        und.name = NULL;
-        checkUndSize(&und);
-        memcpy(und.name, token, symbEnd);
-        und.name[symbEnd] = '\0';
-        und.shows[und.numberOfShows].lineNumber = lineNumber;
-        und.shows[und.numberOfShows].type = location;
-        und.numberOfShows++;
-        unds.array[unds.numberOfUnd] = und;
-        unds.numberOfUnd++;
-        printf("> DEBAG 764: %s \n", und.name);
-    }
+
     if (structureIndex == NUMBEROFSTRUCTURE) {
         if (location == SOURCE) {
             command->command.srcar = INSTANT_DYNAMIC_ADDRESS_RESOLUTION;
@@ -1039,6 +996,14 @@ int identifyIDARSymbol(char* idarStr, Word* location){
         return 0;
     }
     if(symbol->type == INSTRUCTION){
+        if(from<0&&from>=13){
+            printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
+            return 0;
+        }
+        if(to<0&&to>=13){
+            printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
+            return 0;
+        }
         value = cropRangeFromValue(datawords.array[symbol->address.fullword.cell], from, to);
         location->fullword.cell = value.fullword.cell;
     }
@@ -1061,109 +1026,31 @@ int checkSymbolSize() {
     return 1;
 }
 
-/*check Undefined item*/
-int checkUndSize(Undefined *und) {
-    if (!(und->name)) {
-        if (!(und->name = (char *) malloc(kMAX_SYMBOL_NAME_SIZE * sizeof(char)))) {
-            printf(">    ERROR NOT ENOGH SPACE!!!\n");
-            return 0;
-        }
-    }
-    if (und->size <= (und->numberOfShows + 3)) {
-
-        und->size += 3;
-        /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
-        if ((und->shows = (Show *) realloc(und->shows, (und->size) * sizeof(Show))) == NULL) {
-            /* code */
-            printf(">    ERROR NOT ENOGH SPACE!!!\n");
-            return 0;
-        }
-        /*TODO: CONSTRUCT shows.*/
-
-        printf(">   ARRAY RESIZED!\n");
-        return 1;
-    }
-    return 1;
-
-}
-
-/*Check the Undefined list*/
-int checkUndsSize(Undefineds *und) {
-    if (und->size <= (und->numberOfUnd + 3)) {
-
-        und->size += 3;
-        /*WARNING: DONT REALLOC DIRECTLY TO SAME PARAM!-----------------------------------------*/
-        if ((und->array = (Undefined *) realloc(und->array, sizeof(Undefined) * und->size)) == NULL) {
-            /* code */
-            printf(">    ERROR NOT ENOGH SPACE!!!\n");
-            return 0;
-        }
-        printf(">   ARRAY RESIZED!\n");
-        return 1;
-    }
-    return 1;
-
-}
-
-int addUndefined(char *token, int type) {
-    int i = 0;
-    Undefined und;
-    while (i < unds.numberOfUnd) {
-        /*Trying to fined more of
-         */
-        if (!strcmp(token, unds.array[i].name)) {
-            checkUndSize(&unds.array[i]);
-            unds.array[i].shows[unds.array[i].numberOfShows].lineNumber = lineNumber;
-            unds.array[i].shows[unds.array[i].numberOfShows].type = type;
-            unds.array[i].numberOfShows++;
-            return 1;
-        }
-        i++;
-    }
-    und.size = 0;
-    und.numberOfShows = 0;
-    und.shows = NULL;
-    und.name = NULL;
-    checkUndSize(&und);
-    strcpy(und.name, token);
-    und.shows[und.numberOfShows].lineNumber = lineNumber;
-    und.shows[und.numberOfShows].type = type;
-    und.numberOfShows++;
-    unds.array[unds.numberOfUnd] = und;
-    unds.numberOfUnd++;
-    return 1;
-}
-
 Word cropRangeFromValue(Word value, int startBit, int endBit){
     /*TODO: Negative number.*/
     Word newValue = createInstanceOfWord();
     int mask = ~0;
     newValue.fullword.cell = value.fullword.cell;
-    newValue.fullword.cell>>=startBit-1;
+    newValue.fullword.cell>>=startBit;
     mask<<=(endBit-startBit+1);
     mask = ~mask;
     newValue.fullword.cell&=mask;
+    mask = 1;
+    mask<<=(endBit-startBit);
+    if(newValue.fullword.cell&mask){
+        mask = ~0;
+        mask<<=(endBit-startBit);
+        newValue.fullword.cell|=mask;
+    }
+    newValue.fullword.cell<<=2;
+
 
     return newValue;
 }
 
-void printUndefineds() {
-    int i;
-    printf("----------------UNDIFINEDS--------------\n");
-    for (i = 0; unds.numberOfUnd > i; i++) {
-        int j;
-        printf("The Undefined: '%s' has %d shows in lines: ", unds.array[i].name, unds.array[i].numberOfShows);
-        for (j = 0; j < unds.array[i].numberOfShows; j++) {
-            printf("%d, ", unds.array[i].shows[j]);
-        }
-        printf("\n");
-    }
-    printf("--------------------------------------\n");
-}
-
 void printSymbols(void) {
     int i;
-    printf("----------------UNDIFINEDS--------------\n");
+    printf("----------------Symbols--------------\n");
     for (i = 0; symbols.numberOfSymbols > i; i++) {
         int j;
         printf("The Symbol: '%s' has an address of: '%u' isExternal = '%d' Type: '%d' ", symbols.array[i].name,
@@ -1181,51 +1068,100 @@ char* convertToBase8(){
     int arrayIndex = 0;
     int i = 0;
     char base8[MAX_MEMORY];
-    int address = 100;
-    int datalength = base10ToBase8(datawords.numberOfWords);
-    int codelength = base10ToBase8(codewords.numberOfWords);
-    /*Data length format*/
-    snprintf(base8,MAX_MEMORY,datalength);
-    while(base8[i]!=NULL){
-        translated[arrayIndex] = base8Symbol(base8[i]-'0');
-        arrayIndex++;
-        i++;
-    }
-    /*Spaced*/
-    translated[arrayIndex] =' ';
+    unsigned int address = 100;
+    Word datalength = createInstanceOfWord();
+    Word codelength = createInstanceOfWord();
+    datalength.fullword.cell = datawords.numberOfWords;
+    codelength.fullword.cell = codewords.numberOfWords;
+
+    translated[arrayIndex] = base8Symbol(codelength.base8.block4);
     arrayIndex++;
-    i = 0;
-    /*Code Length format*/
-    snprintf(base8,MAX_MEMORY,codelength);
-    while(base8[i]!=NULL){
-        translated[arrayIndex] = base8Symbol(base8[i]-'0');
-        arrayIndex++;
-        i++;
-    }
+    translated[arrayIndex] = base8Symbol(codelength.base8.block3);
+    arrayIndex++;
+    translated[arrayIndex] = base8Symbol(codelength.base8.block2);
+    arrayIndex++;
+    translated[arrayIndex] = base8Symbol(codelength.base8.block1);
+    arrayIndex++;
+
+    translated[arrayIndex] = ' ';
+    arrayIndex++;
+
+    translated[arrayIndex] = base8Symbol(datalength.base8.block4);
+    arrayIndex++;
+    translated[arrayIndex] = base8Symbol(datalength.base8.block3);
+    arrayIndex++;
+    translated[arrayIndex] = base8Symbol(datalength.base8.block2);
+    arrayIndex++;
+    translated[arrayIndex] = base8Symbol(datalength.base8.block1);
+    arrayIndex++;
+
+    translated[arrayIndex] = '\n';
+    arrayIndex++;
+
     i = 0;
     while(i<codewords.numberOfWords){
         Word temp = createInstanceOfWord();
         /*Address format*/
-        int addressB8 = base10ToBase8(address);
-        int addressI = 0;
-        snprintf(base8,MAX_MEMORY,addressB8);
-        while(base8[addressI]!=NULL){
-            translated[arrayIndex] = base8Symbol(base8[i]-'0');
-            addressI++;
-            arrayIndex++;
-        }
+        temp.fullword.cell = address;
+        translated[arrayIndex] = base8Symbol(temp.base8.block4);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block3);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block2);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block1);
+        arrayIndex++;
+        translated[arrayIndex] = ' ';
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(codewords.array[i].base8.block5);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(codewords.array[i].base8.block4);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(codewords.array[i].base8.block3);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(codewords.array[i].base8.block2);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(codewords.array[i].base8.block1);
+        arrayIndex++;
+        translated[arrayIndex] = '\n';
+        arrayIndex++;
 
+
+        i++;
+        address++;
     }
-}
-int base10ToBase8(int number){
-    const int base = 8;
-    int resault = 0;
-    while(number != 0){
-        resault += number%base;
-        number = number/8;
-        resault*=10;
+    i=0;
+    while(i<datawords.numberOfWords){
+        Word temp = createInstanceOfWord();
+        /*Address format*/
+        temp.fullword.cell = address;
+        translated[arrayIndex] = base8Symbol(temp.base8.block4);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block3);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block2);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(temp.base8.block1);
+        arrayIndex++;
+        translated[arrayIndex] = ' ';
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(datawords.array[i].base8.block5);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(datawords.array[i].base8.block4);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(datawords.array[i].base8.block3);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(datawords.array[i].base8.block2);
+        arrayIndex++;
+        translated[arrayIndex] = base8Symbol(datawords.array[i].base8.block1);
+        arrayIndex++;
+        translated[arrayIndex] = '\n';
+        arrayIndex++;
+
+        i++;
+        address++;
     }
-    return resault;
+    return translated;
 }
 char base8Symbol(int number){
     /* !@#$%^&* is assigned to 01234567 */
@@ -1251,5 +1187,22 @@ char base8Symbol(int number){
     }
 }
 int freeAll(){
-
+    int i = 0;
+    while(i<symbols.numberOfSymbols){
+        free(symbols.array[i].name);
+        symbols.array[i].name = NULL;
+        i++;
+    }
+    free(symbols.array);
+    free(codewords.array);
+    free(datawords.array);
+    symbols.array = NULL;
+    symbols.size = 0;
+    symbols.numberOfSymbols = 0;
+    codewords.array = NULL;
+    codewords.size = 0;
+    codewords.numberOfWords = 0;
+    datawords.array = NULL;
+    datawords.numberOfWords = 0;
+    datawords.size = 0;
 }

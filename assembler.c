@@ -8,6 +8,7 @@ int secondEntry(FILE* input);
 int main(int argc, const char * argv[]){
 	int i;
 	FILE *fi;
+    char *output;
 
 	for(i=1;i<argc;i++){
 		if(!(fi = (openFile(argv[i], ".as", "r")))){
@@ -19,14 +20,26 @@ int main(int argc, const char * argv[]){
 			continue;
 		}
         printArr();
-        printUndefineds();
         printSymbols();
 		rewind(fi);
         if(!secondEntry(fi)){
             continue;
         }
+        fclose(fi);
+
+        if(!(fi = openFile(argv[i],".ob","w"))){
+            fprintf(stderr,"-------------------------FATAL-------------------------\n");
+            continue;
+        }
         printArr();
-        convertToBase8();
+        output = convertToBase8();
+        fprintf(fi,"%s",output);
+        fclose(fi);
+        free(output);
+        fi = NULL;
+        freeAll();
+
+
 
 	}
 	return 0;

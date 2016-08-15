@@ -20,8 +20,8 @@ typedef union Word{
 	/*Binary structure: |DUMY|PARAM2|PARAM1|ERA|*/
 	struct paddress{
 		unsigned int ERA:2;
-		 int src:6;
-		 int dest:6;
+		int dest:6;
+		int src:6;
 		unsigned int dumy:1;
 
 	}paddress;
@@ -43,8 +43,8 @@ typedef union Word{
 typedef struct{
 	Word *array;
 	int* lines;
-	int numberOfWords;
-	int size;
+	unsigned int numberOfWords;
+	unsigned int size;
 }Words;
 
 /*Address resolution*/
