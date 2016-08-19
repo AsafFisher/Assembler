@@ -93,11 +93,11 @@ int parseLine(char *buff, int number, FILE* err) {
     int hasSymbol;
     int actionID = 0;
     int wasFound;
+    Word *warningsRemover = malloc(sizeof(Word));
     Word word;
     hasSymbol = false;
     lineNumber = number;
     errorout = err;
-    Word *warningsRemover = malloc(sizeof(Word));
     warningsRemover->pvalue.ERA = 0;
     warningsRemover->paddress.ERA = 0;
     warningsRemover->paddress.dumy = 0;
@@ -457,10 +457,11 @@ int setSymbolValue(char *param, Word *location, int commandIndex) {
     }
     if(symbol->isExternal){
         Word address = createInstanceOfWord();
+        int strindex = 0;
         address.fullword.cell = (unsigned int)commandIndex+MEMORY_START;
         symbol->address.pvalue.ERA = EXTERNAL;
         location->fullword.cell = symbol->address.fullword.cell;
-        int strindex = 0;
+
         while(strindex<strlen(symbol->name)){
             externs[externsPtr] = symbol->name[strindex];
             externsPtr++;
@@ -565,6 +566,7 @@ int updateStringToMemory(char *token) {
     int i = 0;
     int lindex;
     int found = 0;
+    Word val;
 
     while (i < (strlen(token) - 1)) {
         if (token[i] == '\"') {
@@ -598,21 +600,21 @@ int updateStringToMemory(char *token) {
     }
     while (i < lindex) {
         /*Parse the inner string.*/
-        Word val;
+        Word val1;
         if (!checkSize(&datawords)) {
             /* ERROR ALLOCATING SPACE! */
 
             return 0;
         }
-        if (!setWordValue(&val, (unsigned int) token[i],errorout)) {
+        if (!setWordValue(&val1, (unsigned int) token[i],errorout)) {
             /*ERROR VALUE TOO BIG*/
             return 0;
         }
-        datawords.array[datawords.numberOfWords] = val;
+        datawords.array[datawords.numberOfWords] = val1;
         i++;
         datawords.numberOfWords++;
     }
-    Word val;
+
     if(!setWordValue(&val, 0, errorout)){
         return  0;
     }
@@ -948,8 +950,9 @@ int isParamIAR(Word *command, char *token, int location) {
 
 int isParamDRAR(Word *command, char *token, int location) {
     Word arg = createInstanceOfWord();
-    arg.paddress.ERA = ABSULUT;
     int i = 0;
+    arg.paddress.ERA = ABSULUT;
+
 
     while (i < REGISTERS_NUMER) {
         if (!strcmp(registers[i], token)) {
@@ -1022,7 +1025,7 @@ int identifyIDARSymbol(char* idarStr, Word* location){
     Symbol* symbol;
     Word value;
     char symbolName[kMAX_SYMBOL_NAME_SIZE];
-    while(idarStr[i]!=NULL){
+    while(idarStr[i]!='\n'){
         if(idarStr[i]=='['){
             endOfName = i;
             i++;
@@ -1271,7 +1274,7 @@ char base8Symbol(int number){
         case 7:
             return '*';
         default:
-            return NULL;
+            return '\n';
     }
 }
 int freeAll(){
