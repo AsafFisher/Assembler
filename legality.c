@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "legality.h"
 #define FIRST_LABEL  1
 #define LABEL_space 2
 #define MAX_LABEL 30
@@ -35,26 +34,10 @@ int immediate_addresing(char*buf);
 int dinamic_direct_addresing(char*buf);
 int register_addresing(char*buf);
 
-/*int main()
-{
- char line1[80]="K: .data 22   ",line5[80]="MAIN: mov K      ",line4[80]="END: stop  ",line3[80]="STR: .string \"abcdef\"",line2[80]="LENGTH: .data 6,-9,15";
-   if(is_legal_line(line1,1))
-	printf("ok\n"); 
-if(	is_legal_line(line2,2))
-	printf("ok\n"); 
-if(	is_legal_line(line3,3)) 
-	printf("ok\n"); 
-if(	is_legal_line(line4,4))
-	printf("ok\n"); 
-
-if(	is_legal_line(line5,5))
-	printf("ok\n");  
-printf("%s\n%s\n%s\n%s\n%s\n",line1,line2,line3,line4,line5);
-	return 1;
-}
-*/
+ 
 int is_legal_line(char *buf,int line)/*----------------check if the line is legal*/
 {
+ 	char str[MAX_LABEL];
  	has_cmd=cmd_type=start_in_label=NO; /*initialization of the global variables*/
  	if(isCommentOrEmpty(buf))/*    Comment Or Empty line */
  		return 1;
@@ -64,9 +47,10 @@ int is_legal_line(char *buf,int line)/*----------------check if the line is lega
  			return 0;
  		else if (check_label(buf)==FIRST_LABEL)
  			start_in_label=YES;
- 		else if	(check_label(buf)!=LABEL_space)
+ 		else if	((check_label(buf)!=LABEL_space)||(check_label(buf)==LABEL_space&&has_cmd==NO))
  		{
- 			printf("error - label  must finish with : , line -%d\n",line);
+ 			sscanf(buf,"%s\n",str);
+ 			printf("error - label\"%s\" must finish with ':'   (line -%d)\n",str,line);
  			return 0;
  		}	
  	}
@@ -100,7 +84,7 @@ int good_label(char*buf,int line)/*----------------check if has use in register 
 	 	i++;
 	 if(i>MAX_LABEL) 
 	 	{
-	 		printf("error-the maximum length of label it 30 line-%d\n",line);
+	 		printf("error-the maximum length of label it 30 (line-%d)\n",line);
 	 		return 0;
 	 	}
 	 temp[i]='\0';
@@ -109,7 +93,7 @@ int good_label(char*buf,int line)/*----------------check if has use in register 
  		{
  			if(!isspace(buf[i]))
  			{
- 				printf("error- worng using in command word %s,need space after command,line-%d\n",temp,line);
+ 				printf("error- worng using in command word %s,need space after command,(line-%d)\n",temp,line);
  				return 0;
  			}
  			has_cmd=YES;
@@ -117,7 +101,7 @@ int good_label(char*buf,int line)/*----------------check if has use in register 
  		}	
  	else if(j<=r7)
  	{
- 		printf("error- worng using in register word %s,line-%d\n",temp,line);
+ 		printf("error- worng using in register word \"%s\"(line-%d)\n",temp,line);
  		return 0;
  	}			
 	return 1;
@@ -170,7 +154,7 @@ int search_point_or_cmd(char * buf,int line)/* -----------search point(for direc
 		i++;
 	if( (buf[i]!='.')&&(!isalpha(buf[i])) )
 		{
-			printf("error -line can start just with letter or '.' for directive ,line-%d\n",line);
+		 printf("error-'%c'it bad start for'%s' line ,can start just with letter or'.'for directive(line-%d)\n",buf[i],buf,line);
  			return 0;
  		}
 	if(start_in_label==YES)/*if line start in label skip on label*/
@@ -201,10 +185,10 @@ int is_legal_directive(char*buf,int line)/*------------check the type of directi
 	if(!strcmp(temp,"entry")||!strcmp(temp,"extern"))
 	{
 		if(start_in_label==YES)
-			printf("warning - entry/extern directive not need a lable before him, line-%d\n",line);
+			printf("warning - entry/extern directive not need a lable before him, (line-%d)\n",line);
 		return is_legal_ent_ext(&buf[i],line);
 	}
-	printf("error -no such directive name %s, line-%d\n",temp,line);
+	printf("error -no such directive name\"%s\", line-%d\n",temp,line);
 	return 0;
 }
 
@@ -219,7 +203,7 @@ int is_legal_data(char*buf,int line)/*---------------------check if the paramete
 		{	
 			if(!isdigit(buf[i+1]))
 			{
-				printf("error - you need digit after operator ,line%d\n",line);
+				printf("error-'%c'worng character in'%s' need digit after'%c'operator(line%d)\n",buf[i+1],&buf[i],buf[i],line);
 				return 0;
 			}
 			i++;
@@ -237,10 +221,10 @@ int is_legal_data(char*buf,int line)/*---------------------check if the paramete
 				i++;
 				continue;
 			}
-			printf("error - you need insert ',' after digit,line-%d\n",line);
+			printf("error-'%c'worng character in'%s' need insert','after number(line-%d)\n",buf[i],buf,line);
 			return 0;
 		}
-		printf("error - you need insert digit or opertor ,line-%d\n",line);
+		printf("error-'%c'worng character in'%s' need insert digit or opertor(line-%d)\n",buf[i],buf,line);
 		return 0;
 	}
 }
@@ -252,7 +236,7 @@ int is_legal_string(char*buf,int line)/*-------------------check if the  string 
 			i++;
 	if(buf[i]!='"')
 	{
-		printf("error -string must begin with - \" ,line-%d\n",line);
+		printf("error -'%c'worng character,string must begin with - '\" '(line-%d)\n",buf[i],line);
 		return 0;
 	}
 	i++;
@@ -263,7 +247,7 @@ int is_legal_string(char*buf,int line)/*-------------------check if the  string 
 			i++;
 	if(buf[i]=='\n'||buf[i]=='\0')
 		return 1;
-	printf("error - you can't insert characters after the string ,line-%d\n",line);
+	printf("error-'%c' worng character, you can't insert not-space after the string(line-%d)\n",buf[i],line);
 	return 0;
 }
 			/*-------------------------------------check the lable after extern/entry directive and that has nothing after it*/
@@ -274,7 +258,7 @@ int is_legal_ent_ext(char*buf,int line)/*---if there is lable before the directi
 			i++; 
 	if(!isalpha(buf[i]))
 	{
-		printf("error - label must begin with letter ,line-%d\n",line);
+		printf("error-'%c' bad start for label\"%s\" label must begin with letter (line-%d)\n",buf[i],&buf[i],line);
 		return 0;
 	}
 	while(isalnum(buf[i]))
@@ -282,23 +266,25 @@ int is_legal_ent_ext(char*buf,int line)/*---if there is lable before the directi
 	if(buf[i]=='\n'||buf[i]=='\0')
 		return 1;
 	if(!isspace(buf[i]))
-		printf("error - label can combined just with letters and digit ,line-%d\n",line);	
+		printf("error-'%c'bad character in \"%s\", label can combined just with letters and digit(line-%d)\n",buf[i],buf,line);	
 	while(isspace(buf[i]))
 		i++;
 	if(buf[i]=='\n'||buf[i]=='\0')
 		return 1;
-	printf("error - lable can't be with space,line-%d\n",line);
+	printf("error-\"%s\" bad lable, lable can't be with space(line-%d)\n",buf,line);
 	return 0;
 }	 
 	
-int is_legal_cmd(char*buf,int line)/*------------------check the command is legal ,and some operands is need*/
+int is_legal_cmd(char*buf,int line)/*-----------------check the command is legal ,and some operands is need*/
 {
+	char str[MAX_LABEL];
 	int i=0;
-	if(!good_label(buf,line))/*take the command name,and check that there is aspace after it*/
+	if(!good_label(buf,line))/*take the command name,and check that there is a space after it*/
 		return 0;
  	if(has_cmd==NO)
  	{	
- 		printf("error - no such command ,line-%d\n",line);
+ 		sscanf(buf,"%s",str);
+ 		printf("error - no such command \"%s\"(line-%d)\n",str,line);
  		return 0;
  	}
 	while(isalpha(buf[i]))/*skip after the command name*/
@@ -337,12 +323,12 @@ int  two_oper(char*buf,int line)/*-----------------------search operands for two
 	}		
 	if(!i)/*there is no legal addresing method*/
 	{
-			printf("error - worng parameters in first operand for %s ,line-%d\n",actionsANDregisters[cmd_type],line);
+			printf("error - worng parameters in first operand for %s (line-%d)\n",actionsANDregisters[cmd_type],line);
 			return 0;
 	}
 	if(buf[i]!=',')/*we need ',' before the second operand*/
 	{
-		printf("error -you need ',' after first parameter ,line-%d\n",line);
+		printf("error -you need ',' after first parameter (line-%d)\n",line);
 		return 0;
 	}
 	i++;
@@ -368,13 +354,13 @@ int  two_oper(char*buf,int line)/*-----------------------search operands for two
 	}
 	if(!j)/*there is no legal addresing method*/
 	{
-		printf("error - worng parameters in second operand for %s ,line-%d\n",actionsANDregisters[cmd_type],line);
+		printf("error - worng parameters in second operand for %s(line-%d)\n",actionsANDregisters[cmd_type],line);
 		return 0;	
 	}			
 	i+=j;
 	if(buf[i]!='\n'&&buf[i]!='\0')	/*there is any character after 2 operands*/
 	{
-		printf("error - you can't insert any character after 2 operands of %s  ,line- %d\n",actionsANDregisters[cmd_type],line);
+		printf("error-you can't insert any character after 2 operands of %s(line- %d)\n",actionsANDregisters[cmd_type],line);
 		return 0;
 	}
 	return 1;
@@ -403,12 +389,12 @@ int  one_oper(char*buf,int line)/*--------------------------------------search o
 	}	
 	if(!i)/*there is no legal addresing method*/
 	{
-			printf("error - worng parameters for operand for %s command,line-%d\n",actionsANDregisters[cmd_type],line);
+			printf("error - worng parameters for operand for %s command(line-%d)\n",actionsANDregisters[cmd_type],line);
 			return 0;
 	}
 	if(buf[i]!='\n'&&buf[i]!='\0')	/*there is any character after the operand*/
 	{
-		printf("error - you can't insert any characters after the operand of %s ,line- %d\n",actionsANDregisters[cmd_type],line);
+		printf("error - you can't insert any characters after the operand of %s(line- %d)\n",actionsANDregisters[cmd_type],line);
 		return 0;
 	}
 	return 1;

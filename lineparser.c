@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "lineparser.h"
-#include "protocols.h"
-#include "assembler.h"
 #include "legality.h"
+
 char *actions[] = {"mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red", "prn", "jsr",
                    "rts", "stop"};
 char *registers[] = {"r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7‬‬"};
@@ -28,31 +27,45 @@ enum {
 Words codewords;
 Words datawords;
 Symbols symbols;
+FILE* errorout;
 int lineNumber;
+char* externs;
+int externsPtr = 0;
+char* entrys;
+int entryPtr = 0;
 
+/*Add symbol to the symbol array*/
 int addSymbol(Symbol symbol);
 
-int setSymbolValue(char *line, Word *location);
+/*Set the symbol address to the location*/
+int setSymbolValue(char *line, Word *location, int commandIndex);
 
+/*Update data to the array (.string data and .data data)*/
 int updateDataToMemory(char *token);
 
+/*update .string data to array*/
 int updateStringToMemory(char *token);
 
+/*Update parameters of command to memory*/
 int updateCommandParamToMemory(Word command, char *token);
 
+/*set up the command's word parameters.*/
 int setUpCommandParams(Word *word, char *token);
 
-int base10ToBase8(int number);
-
+/*identify a with idar type*/
 int identifyIDARSymbol(char* idarStr,Word *location);
 
-
+/*Take a base8 number and convert it into a special base8 char*/
 char base8Symbol(int number);
 
+
+/*Release memory allocations*/
 int freeAll();
 
+/*Return a spesific symbol from the symbol array using its name.*/
 Symbol* getSymbolByName(char* param);
 
+/*Crop the value from startBit to endBit in a Word type.*/
 Word cropRangeFromValue(Word value, int startBit, int endBit);
 /*Check if param is INSTANT_ADDRESS_RESOLUTION, create a Word and save space in memory.
 * location is the type of the assignment (SOURCE OR DESTINATION).
@@ -65,6 +78,7 @@ int isParamDRAR(Word *command, char *token, int location);
 /*Check if param is INSTANT_DYNAMIC_ADDRESS_RESOLUTION, create a Word and save space in memory.*/
 int isParamIDAR(Word *command, char *token, int location);
 
+/*Check array size and rellocating it.*/
 int checkSymbolSize();
 
 
@@ -73,8 +87,7 @@ int checkSymbolSize();
 
 
 
-
-int parseLine(char *buff, int number) {
+int parseLine(char *buff, int number, FILE* err) {
     Symbol symbol;
     char *token;
     int hasSymbol;
@@ -83,6 +96,13 @@ int parseLine(char *buff, int number) {
     Word word;
     hasSymbol = false;
     lineNumber = number;
+    errorout = err;
+    Word *warningsRemover = malloc(sizeof(Word));
+    warningsRemover->pvalue.ERA = 0;
+    warningsRemover->paddress.ERA = 0;
+    warningsRemover->paddress.dumy = 0;
+    free(warningsRemover);
+
 
     if (!checkSize(&codewords)) {
         /* ERROR ALLOCATING SPACE! */
@@ -92,14 +112,15 @@ int parseLine(char *buff, int number) {
         /* ERROR ALLOCATING SPACE! */
         return 0;
     }
-	
+	/*Check if line is legal.*/
 	if(!is_legal_line( buff,lineNumber))
 		return 0;
+    /*Using strtok to parse the text.*/
     if (!(token = strtok(buff, " \n"))) {
         return 1;
     }
+    /*Check for label*/
     if (token[strlen(token) - 1] == ':') {
-        /* code */
 
         /*Remove the : from the Symbole*/
         hasSymbol = true;
@@ -158,7 +179,7 @@ int parseLine(char *buff, int number) {
 
     if (!strcmp(token, EXTERN)) {
         if (hasSymbol) {
-            printf("> Warning: label not needed. LINE: %d",lineNumber);
+            fprintf(errorout,"> Warning: label not needed. LINE: %d",lineNumber);
         }
         /*Add external symbol.*/
         if ((token = strtok(NULL, "\n")) != NULL) {
@@ -167,7 +188,6 @@ int parseLine(char *buff, int number) {
             symbol.type = INSTRUCTION;
             symbol.address.pvalue.value = 0;
             symbol.isExternal = true;
-            /*TODO: CHECK IF SYMBOL RETURN 0 IF SYMBOL NOT FOUND.*/
             if(!addSymbol(symbol)){
                 return 0;
             }
@@ -178,10 +198,10 @@ int parseLine(char *buff, int number) {
     }
 
     if (!strcmp(token, ENTRY)) {
-        /* TODO: NO Idea what we are doing, but QA said we need to finish it.*/
         return 1;
     }
 
+    /*Check if line is command line*/
     if (hasSymbol) {
         symbol.type = ACTIONT;
         symbol.address.pvalue.value = codewords.numberOfWords;
@@ -193,47 +213,42 @@ int parseLine(char *buff, int number) {
 
     wasFound = false;
     {
+        /* Check if action was found*/
         int iaction = 0;
         while (iaction < ACTION_NUMBER) {
             if (!strcmp(actions[iaction], token)) {
                 wasFound = true;
                 actionID = iaction;
-                printf("> %s Was found.\n", token);
                 break;
             }
             iaction++;
         }
     }
     if (!wasFound) {
-        /* code */
-        printf("> ERROR (LINE %d) operator: '%s' Was not found! \n", lineNumber, token);
+        fprintf(errorout,"> ERROR (LINE %d) operator: '%s' Was not found! \n", lineNumber, token);
         return 0;
     }
-
+    /*Check size and reallocating the array*/
     if (!checkSize(&codewords)) {
         /* ERROR ALLOCATING SPACE! */
         return 0;
     }
+
     word = createInstaceOfCommand((unsigned int) actionID);
     /*codewords.array[IC] = word;*/
 
 
-/*FINISHED HERE! NEXT TIME FINISH FIRST WALKTHROUGH AND SECOND.*/
 /*Check if parameter exist.*/
-
     {
         char *temp = strtok(NULL, "\n\t");
         if (temp == NULL && word.command.grp != NOP) {
             /*ERROR NO PARAMETERS*/
-            printf("> ERROR NO PARAMETER!\n");
-            token = NULL;
+            fprintf(errorout,"> ERROR NO PARAMETER! (LINE: %d)\n",lineNumber);
+            return 0;
         }
         token = temp;
     }
 
-    if (token == NULL && word.command.grp != NOP) {
-        return 0;
-    }
     if (!updateCommandParamToMemory(word, token)) {
         /*ERROR: invalid parameter*/
         return 0;
@@ -244,21 +259,83 @@ int parseLine(char *buff, int number) {
 
 }
 int variableLinker(FILE *input) {
+    /*The acctual index of the command*/
     int commandIndex = 0;
+    /*The line of the file.*/
+
     int currentFileLine = 0;
+
+    entrys = calloc((size_t)LINE_MAX*(symbols.numberOfSymbols),sizeof(char));
+    /*Go over each command in the code array*/
     while (commandIndex < codewords.numberOfWords) {
+        /*The current Word*/
         Word *currentWord = codewords.array + commandIndex;
+        /*The actual line of the command*/
         int currentCommandLine = codewords.lines[commandIndex];
         char line[LINE_MAX];
+        char help[LINE_MAX];
         char *temp = NULL;
+        /*This loop makes sure that each time the pointer of the file points to the same line of the specific command.*/
         while(currentFileLine<currentCommandLine){
+            char *find;
             if(fgets(line,LINE_MAX,input)==NULL){
+                fprintf(errorout,"> ERROR file corrupted.");
                 return 0;
+            }
+            strcpy(help,line);
+            /*Using strtok to parse the text.*/
+            if (!(find = strtok(help, " \n"))) {
+                return 1;
+            }
+            /*Check for label*/
+            if (find[strlen(find) - 1] == ':') {
+                find = strtok(NULL, " \n");
+            }
+            if (!strcmp(find, ENTRY)) {
+                /*Add external symbol.*/
+                if ((find = strtok(NULL, "\n")) != NULL) {
+                    int entrindex = 0;
+                    while (entrindex<symbols.numberOfSymbols){
+                        if (!strcmp(find,symbols.array[entrindex].name)){
+                            Word address = createInstanceOfWord();
+                            int len = 0;
+                            while(len<strlen(find)){
+                                entrys[entryPtr] = find[len];
+                                len++;
+                                entryPtr++;
+                            }
+                            entrys[entryPtr] = ' ';
+                            entryPtr++;
+                            if(symbols.array[entrindex].type == INSTRUCTION){
+                                address.fullword.cell = (unsigned int)symbols.array[entrindex].address.pvalue.value+MEMORY_START+codewords.numberOfWords;
+                            }else {
+                                address.fullword.cell = (unsigned int) symbols.array[entrindex].address.pvalue.value + MEMORY_START;
+                            }
+                            entrys[entryPtr] = base8Symbol(address.base8.block4);
+                            entryPtr++;
+                            entrys[entryPtr] = base8Symbol(address.base8.block3);
+                            entryPtr++;
+                            entrys[entryPtr] = base8Symbol(address.base8.block2);
+                            entryPtr++;
+                            entrys[entryPtr] = base8Symbol(address.base8.block1);
+                            entryPtr++;
+                            entrys[entryPtr] = '\n';
+                            entryPtr++;
+                            break;
+
+
+
+                        }
+                        entrindex++;
+                    }
+                }
+
+
             }
             currentFileLine++;
         }
 
-
+        /*Text manipulations*/
         if(strstr(line,":")!=NULL)
             temp = strtok(line, ":");
         if(temp == NULL){
@@ -266,10 +343,11 @@ int variableLinker(FILE *input) {
         }else{
             temp = strtok(NULL, "\n");
         }
-
+        /*Sort each command using its number of parameters.*/
         if (currentWord->command.grp == NOP) {
             /*No operators next command is right at commandIndex+1*/
             commandIndex++;
+            continue;
         }
         if (currentWord->command.grp == ONEOP) {
             /*One operator, variable is located at commandIndex+1 next command is right at commandIndex+2*/
@@ -277,20 +355,18 @@ int variableLinker(FILE *input) {
             strtok(temp, " ");
             temp = strtok(NULL," \n");
 
-
+            /*Replace the empty cell of the symbols with the actual address. (Direct address resolution and instant dynamic address resolution)*/
             switch(currentWord->command.destar){
                 case DIRECT_ADDRESS_RESOLUTION:
                     /*Search in the */
-                    if(!setSymbolValue(temp,&codewords.array[varIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                    if(!setSymbolValue(temp, &codewords.array[varIndex], varIndex)){
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
-                    /*TODO: FINISH Second case and Two operators*/
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
-
                     if(!identifyIDARSymbol(temp,&codewords.array[varIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
 
@@ -325,14 +401,14 @@ int variableLinker(FILE *input) {
             /*Source*/
             switch(currentWord->command.srcar){
                 case DIRECT_ADDRESS_RESOLUTION:
-                    if(!setSymbolValue(temp,&codewords.array[firstVarIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                    if(!setSymbolValue(temp, &codewords.array[firstVarIndex], firstVarIndex)){
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
                     if(!identifyIDARSymbol(temp,&codewords.array[firstVarIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
@@ -340,18 +416,17 @@ int variableLinker(FILE *input) {
                     break;
             }
             temp = strtok(NULL," ,\n");
-            /*TODO: Finish debagging here.*/
             /*Destenation*/
             switch(currentWord->command.destar){
                 case DIRECT_ADDRESS_RESOLUTION:
-                    if(!setSymbolValue(temp,&codewords.array[secondVarIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                    if(!setSymbolValue(temp, &codewords.array[secondVarIndex], secondVarIndex)){
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
                 case INSTANT_DYNAMIC_ADDRESS_RESOLUTION:
                     if(!identifyIDARSymbol(temp,&codewords.array[secondVarIndex])){
-                        printf("> To check error location please go to line: %d.\n",currentCommandLine);
+                        fprintf(errorout,"> To check error location please go to line: %d.\n",currentCommandLine);
                         return 0;
                     }
                     break;
@@ -364,21 +439,48 @@ int variableLinker(FILE *input) {
         }
 
     }
+    externs[externsPtr] = 0;
+    externsPtr++;
+    entrys[entryPtr] = 0;
+    entryPtr++;
     return 1;
 
 }
 
-/*Code Words has a special built at */
+
 /*Gets a parameter and a Word and replace the contained in the word with the Address of the symbol (return 0 if symbol does not exist)*/
-int setSymbolValue(char *param, Word *location){
-    int i = 0;
+int setSymbolValue(char *param, Word *location, int commandIndex) {
     Symbol* symbol;
     if((symbol = getSymbolByName(param))==NULL){
-        printf("> ERROR: variable named '%s' was never declared!\n",param);
+        fprintf(errorout,"> ERROR: variable named '%s' was never declared!\n",param);
         return 0;
     }
     if(symbol->isExternal){
+        Word address = createInstanceOfWord();
+        address.fullword.cell = (unsigned int)commandIndex+MEMORY_START;
+        symbol->address.pvalue.ERA = EXTERNAL;
         location->fullword.cell = symbol->address.fullword.cell;
+        int strindex = 0;
+        while(strindex<strlen(symbol->name)){
+            externs[externsPtr] = symbol->name[strindex];
+            externsPtr++;
+            strindex++;
+        }
+        externs[externsPtr] = ' ';
+        externsPtr++;
+        externs[externsPtr] = base8Symbol(address.base8.block4);
+        externsPtr++;
+        externs[externsPtr] = base8Symbol(address.base8.block3);
+        externsPtr++;
+        externs[externsPtr] = base8Symbol(address.base8.block2);
+        externsPtr++;
+        externs[externsPtr] = base8Symbol(address.base8.block1);
+        externsPtr++;
+        externs[externsPtr] = '\n';
+        externsPtr++;
+
+
+
         return 1;
     }
     location->pvalue.value = symbol->address.pvalue.value+MEMORY_START+codewords.numberOfWords;
@@ -400,28 +502,26 @@ Symbol* getSymbolByName(char* param){
 
 int addSymbol(Symbol symbol) {
     int i = 0;
-
+    /*Resize array if needed.*/
     if (!checkSymbolSize()) {
         return 0;
     }
 
-
+    /*Check if symbol already exist.*/
     while (i < symbols.numberOfSymbols) {
-        /* code */
         if (!strcmp(symbols.array[i].name, symbol.name)) {
-            /*-------------------ERROR: Multiple declearation!----------------------*/
-            printf("> ERROR: duplicate declearation: %s\n", symbol.name);
+            /*-------------------ERROR: Multiple declaration!----------------------*/
+            fprintf(errorout,"> ERROR: duplicate declaration: %s\n", symbol.name);
             return 0;
         }
         i++;
     }
     symbols.array[symbols.numberOfSymbols] = symbol;
-    printf("> numberOfSymboles: %d\n", symbols.numberOfSymbols);
-    printf("> Added: '%s' to Symbols\n", symbols.array[symbols.numberOfSymbols].name);
     symbols.numberOfSymbols++;
     return 1;
 }
 
+/*Update int values to the memory (.data values)*/
 int updateDataToMemory(char *token) {
     Word value;
     token = strtok(token, ", \n");
@@ -429,16 +529,11 @@ int updateDataToMemory(char *token) {
         long digitVal;
         int i = 0;
 
-        /*TODO:
-        1. If Chars in mid mark error.
-        2. Convert string to number.
-        */
-
         while (i < strlen(token)) {
-            /* code */
+            /* Check validation */
             if (!(isdigit(token[i])) && (token[i] != '-') && (token[i] != '+')) {
                 /* code */
-                printf("> ERROR: '%s' is invalid value!\n", token);
+                fprintf(errorout,"> ERROR: '%s' is invalid value!\n", token);
                 return 0;
             }
             i++;
@@ -450,14 +545,11 @@ int updateDataToMemory(char *token) {
 
             return 0;
         }
-        printf("DATA value: %d\n", (int) digitVal);
-        if (!setWordValue(&value, (unsigned int) digitVal)) {
+        if (!setWordValue(&value, (unsigned int) digitVal, NULL)) {
             /*ERROR VALUE TOO BIG*/
             return 0;
         }
         datawords.array[datawords.numberOfWords] = value;
-        printf("> The value %d was added to DATAWORDS on place:%d \n",
-               datawords.array[datawords.numberOfWords].fullword.cell, datawords.numberOfWords);
         token = strtok(NULL, ", \n");
         datawords.numberOfWords++;
     }
@@ -465,22 +557,18 @@ int updateDataToMemory(char *token) {
 }
 
 int updateStringToMemory(char *token) {
-    /*TODO:If no "" mark
-    PROBLEM: Cant detect char -> ""
-    Check each letter untill you get to "
+    /*
+    Detect char -> ""
+    Check each letter t'ill you get to "
     */
     /*index of start of string*/
     int i = 0;
     int lindex;
     int found = 0;
-    /*
-    if(token[0]!='\"'){
-      printf("ERROR missing first -> Cytation <-\n");
-      return 0;
-    }*/
+
     while (i < (strlen(token) - 1)) {
         if (token[i] == '\"') {
-            /*Find last quotes*/
+            /*found last quotes*/
             found = 1;
             break;
         }
@@ -488,7 +576,7 @@ int updateStringToMemory(char *token) {
     }
     if (!found) {
         /*ERROR last quote not found!*/
-        printf("> ERROR missing first -> Cytation <-\n");
+        fprintf(errorout,"> ERROR missing first -> Cytation <-\n");
         return 0;
     }
 
@@ -505,18 +593,18 @@ int updateStringToMemory(char *token) {
     }
     if (!found) {
         /*ERROR last quote not found!*/
-        printf("> ERROR missing last -> Cytation <-\n");
+        fprintf(errorout,"> ERROR missing last -> Cytation <-\n");
         return 0;
     }
     while (i < lindex) {
-        /* ~ERROR SAGMENT FAULT~ Fixed */
+        /*Parse the inner string.*/
         Word val;
         if (!checkSize(&datawords)) {
             /* ERROR ALLOCATING SPACE! */
 
             return 0;
         }
-        if (!setWordValue(&val, (unsigned int) token[i])) {
+        if (!setWordValue(&val, (unsigned int) token[i],errorout)) {
             /*ERROR VALUE TOO BIG*/
             return 0;
         }
@@ -525,7 +613,9 @@ int updateStringToMemory(char *token) {
         datawords.numberOfWords++;
     }
     Word val;
-    setWordValue(&val,0);
+    if(!setWordValue(&val, 0, errorout)){
+        return  0;
+    }
     datawords.array[datawords.numberOfWords] = val;
     datawords.numberOfWords++;
 
@@ -534,29 +624,11 @@ int updateStringToMemory(char *token) {
 }
 
 int updateCommandParamToMemory(Word command, char *token) {
-    Word *word;/*remove!*/
     int error = 0;
     switch (command.command.grp) {
         case NOP:
-            /*{
-              int i = 0;
-
-              while (i<strlen(token)) {
-                if (token[i]==' '||token[i]=='\0'||token[i]=='\t') {
-                  i++;
-                }
-                error = 1;
-                break;
-              }
-            }
-            printf("DEBAG WORKS\n" );
-            if (error) {
-              printf("> Invalid Token, no parameter required: '%s'\n",token);
-              return 0;
-            }*/
             codewords.array[codewords.numberOfWords] = command;
             codewords.lines[codewords.numberOfWords] = lineNumber;
-            word = &codewords.array[codewords.numberOfWords];
             codewords.numberOfWords++;
 
             return 1;
@@ -565,7 +637,7 @@ int updateCommandParamToMemory(Word command, char *token) {
             while (i < strlen(token)) {
                 if (token[i] == ',') {
                     /* ERROR TOO MANY PARAMS */
-                    printf("> ERROR: \"%s\" is an iligal parameter for this type of command.\n", token);
+                    fprintf(errorout,"> ERROR (LINE: %d): \"%s\" is an iligal parameter for this type of command.\n",lineNumber, token);
                     error = 1;
                     break;
                 }
@@ -582,15 +654,11 @@ int updateCommandParamToMemory(Word command, char *token) {
             }
             codewords.array[codewords.numberOfWords] = command;
             codewords.lines[codewords.numberOfWords] = lineNumber;
-            word = &codewords.array[codewords.numberOfWords];
             codewords.numberOfWords++;
-            printf("> DEBAG 406: N: %d - S: %d\n", codewords.numberOfWords, codewords.size);
             if (!setUpCommandParams(&codewords.array[codewords.numberOfWords - 1], token)) {
-                printf("> DEBAG ERROR!!!\n");
+                fprintf(errorout,"> ERROR (LINE: %d)\n",lineNumber);
                 return 0;
             }
-            printf("> COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",
-                   word->command.grp, word->command.opcode, word->command.srcar, word->command.destar);
 
             return 1;
         case TWOP: {
@@ -604,7 +672,7 @@ int updateCommandParamToMemory(Word command, char *token) {
                 i++;
             }
             if (!found) {
-                printf("Missing parameter: %s\n", token);
+                fprintf(errorout,">ERROR (LINE: %d): Missing parameter: %s\n",lineNumber, token);
                 error = 1;
             }
         }
@@ -618,14 +686,11 @@ int updateCommandParamToMemory(Word command, char *token) {
             }
             codewords.array[codewords.numberOfWords] = command;
             codewords.lines[codewords.numberOfWords] = lineNumber;
-            word = &codewords.array[codewords.numberOfWords];
             codewords.numberOfWords++;
             if (!setUpCommandParams(&codewords.array[codewords.numberOfWords - 1], token)) {
-                printf("> DEBAG ERROR!!!\n");
+                fprintf(errorout,"> ERROR (LINE: %d)\n",lineNumber);
                 return 0;
             }
-            printf("> COMMAND GROUP:'%u' COMMAND OPCODE:'%u' COMMAND SRCAR:'%u' COMMAND DESTAR:'%u' \n",
-                   word->command.grp, word->command.opcode, word->command.srcar, word->command.destar);
 
 
             return 1;
@@ -644,12 +709,12 @@ int setUpCommandParams(Word *command, char *token) {
         case cmp:
 
             if ((token = strtok(token, " ,")) == NULL) {
-                printf("> ERROR 469: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d):'%s'\n",lineNumber, token);
                 return 0;
             }
             printf("TOKEN %s\n", token);
             if (strlen(token) == 0) {
-                printf("ERROR 474: Token has no arguments!\n");
+                fprintf(errorout,"ERROR (LINE: %d): Token has no arguments!\n",lineNumber);
                 return 0;
             }
             if (isParamIAR(command, token, SOURCE)) {
@@ -666,12 +731,12 @@ int setUpCommandParams(Word *command, char *token) {
             }
             /*--------------------------DESTINATION---------------------------*/
             if ((token = strtok(NULL, " \t\n")) == NULL) {
-                printf("> ERROR 490: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d): '%s'\n", lineNumber,token);
                 ERROR = 1;
                 return !ERROR;
             }
             if (strlen(token) == 0) {
-                printf("> ERROR: Token has no arguments! LINE: %d\n",lineNumber);
+                fprintf(errorout,"> ERROR: Token has no arguments! LINE: %d\n",lineNumber);
                 ERROR = 1;
                 return !ERROR;
             }
@@ -692,19 +757,14 @@ int setUpCommandParams(Word *command, char *token) {
         case mov:
         case add:
         case sub:
-            /*FIRST PARAM:   -------------ERROR STRTOK NOT WOKRING!!!------------*/
-            /*TODO: Check validations! Such as:
-             * "K[2-4] asd, LENGTH" - INVALID
-             * "ab dv, askd" - INVALID
-             * "asdas    , sdsd a" - INVALID
-             * "asdasdas    ,      fsdfsdf " - VALID! <-----------
-             * */
+            /*FIRST PARAM: ------------*/
+
             if ((token = strtok(token, " ,")) == NULL) {
-                printf("> ERROR 517: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d): '%s'\n", lineNumber,token);
                 return 0;
             }
             if (strlen(token) == 0) {
-                printf("ERROR 521: Token has no arguments!\n");
+                fprintf(errorout,"ERROR (LINE %d): Token has no arguments!\n",lineNumber);
                 return 0;
             }
             if (isParamIAR(command, token, SOURCE)) {
@@ -721,22 +781,22 @@ int setUpCommandParams(Word *command, char *token) {
             }
             /*-----------------------DESTINATION------------------------------*/
             if ((token = strtok(NULL, " \t\n")) == NULL) {
-                printf("> ERROR 537: '%s'LINE: %d\n", token,lineNumber);
+                fprintf(errorout,"> ERROR 537: '%s'LINE: %d\n", token,lineNumber);
                 ERROR = 1;
                 return !ERROR;
             }
             if (strlen(token) == 0) {
-                printf("> ERROR: Token has no arguments! LINE: %d\n",lineNumber);
+                fprintf(errorout,"> ERROR: Token has no arguments! LINE: %d\n",lineNumber);
                 ERROR = 1;
                 return !ERROR;
             }
             if (isParamIAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else if (isParamDRAR(command, token, DESTINATION)) {
                 ERROR = 0;
             } else if (isParamIDAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
@@ -757,23 +817,22 @@ int setUpCommandParams(Word *command, char *token) {
         case jsr:
             /*--------------------------DESTINATION---------------------------*/
             if ((token = strtok(token, " \t\n")) == NULL) {
-                printf("> ERROR 570: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d): '%s'\n", lineNumber,token);
                 ERROR = 1;
                 return !ERROR;
             }
             if (strlen(token) == 0) {
-                printf("> ERROR 575: Token has no arguments!\n");
+                fprintf(errorout,"> ERROR (LINE: %d): Token has no arguments!\n",lineNumber);
                 ERROR = 1;
                 return !ERROR;
             }
-            printf("> DEBAG 579: WORKING!\n");
             if (isParamIAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else if (isParamDRAR(command, token, DESTINATION)) {
                 ERROR = 0;
             } else if (isParamIDAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
@@ -788,12 +847,12 @@ int setUpCommandParams(Word *command, char *token) {
         case prn:
             /*-----------------------DESTINATION------------------------------*/
             if ((token = strtok(token, " \t\n")) == NULL) {
-                printf("> ERROR 598: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d): '%s'\n", lineNumber,token);
                 ERROR = 1;
                 return !ERROR;
             }
             if (strlen(token) == 0) {
-                printf("> ERROR 603: Token has no arguments!\n");
+                fprintf(errorout,"> ERROR (LINE: %d): Token has no arguments!\n",lineNumber);
                 ERROR = 0;
                 return !ERROR;
             }
@@ -814,21 +873,21 @@ int setUpCommandParams(Word *command, char *token) {
         case lea:
             /*FIRST PARAM:   -------------------------*/
             if ((token = strtok(token, " ,")) == NULL) {
-                printf("> ERROR 623: '%s'\n", token);
+                fprintf(errorout,"> ERROR (LINE: %d): '%s'\n", lineNumber,token);
                 return 0;
             }
             if (strlen(token) == 0) {
-                printf("ERROR 627: Token has no arguments!\n");
+                fprintf(errorout,"ERROR (LINE: %d): Token has no arguments!\n",lineNumber);
                 return 0;
             }
             if (isParamIAR(command, token, SOURCE)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else if (isParamDRAR(command, token, SOURCE)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else if (isParamIDAR(command, token, SOURCE)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
                 command->command.srcar = DIRECT_ADDRESS_RESOLUTION;
@@ -843,17 +902,17 @@ int setUpCommandParams(Word *command, char *token) {
                 return !ERROR;
             }
             if (strlen(token) == 0) {
-                printf("> ERROR 648: Token has no arguments!\n");
+                fprintf(errorout,"> ERROR (LINE: %d): Token has no arguments!\n",lineNumber);
                 ERROR = 1;
                 return !ERROR;
             }
             if (isParamIAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else if (isParamDRAR(command, token, DESTINATION)) {
                 ERROR = 0;
             } else if (isParamIDAR(command, token, DESTINATION)) {
-                printf("Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
+                fprintf(errorout,"Error cannot do command with parameter: '%s' LINE: %d\n",token,lineNumber);
                 ERROR = 1;
             } else {
                 command->command.destar = DIRECT_ADDRESS_RESOLUTION;
@@ -863,7 +922,7 @@ int setUpCommandParams(Word *command, char *token) {
             }
             return !ERROR;
         default:
-            printf("> ERROR Wrong Abort.\n");
+            fprintf(errorout,"> ERROR (LINE: %d) Wrong Abort.\n",lineNumber);
             return 0;
 
     }
@@ -889,7 +948,7 @@ int isParamIAR(Word *command, char *token, int location) {
 
 int isParamDRAR(Word *command, char *token, int location) {
     Word arg = createInstanceOfWord();
-    arg.paddress.ERA = 0;
+    arg.paddress.ERA = ABSULUT;
     int i = 0;
 
     while (i < REGISTERS_NUMER) {
@@ -926,15 +985,13 @@ int isParamIDAR(Word *command, char *token, int location) {
     int const NUMBEROFSTRUCTURE = 3;
     char idarStructure[] = {'[', '-', ']'};
     int i = 0;
-    int symbEnd = 0;
+    /*Check IDAR Template*/
     while (i < strlen(token)) {
         if (structureIndex >= NUMBEROFSTRUCTURE) {
             break;
         }
         if (token[i] == idarStructure[structureIndex]) {
-            /* code */
             if (structureIndex == 0) {
-                symbEnd = i;
             }
             structureIndex++;
         }
@@ -958,7 +1015,7 @@ int isParamIDAR(Word *command, char *token, int location) {
 
 int identifyIDARSymbol(char* idarStr, Word* location){
     int i = 0;
-    int endOfName;
+    int endOfName = 0;
     int from = 0;
     int to = 0;
     int foundMid = 0;
@@ -991,20 +1048,20 @@ int identifyIDARSymbol(char* idarStr, Word* location){
 
         i++;
     }
-    memcpy(symbolName,idarStr,endOfName);
+    memcpy(symbolName,idarStr,sizeof(char)*endOfName);
     symbol = getSymbolByName(symbolName);
     if(symbol == NULL){
-        printf("> ERROR: variable named '%s' was never declared!\n",symbolName);
+        fprintf(errorout,"> ERROR (LINE: %d): variable named '%s' was never declared!\n",lineNumber,symbolName);
         return 0;
     }
     switch (symbol->type){
         case INSTRUCTION:
             if(from<0&&from>=13){
-                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
+                fprintf(errorout,"> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
                 return 0;
             }
             if(to<0&&to>=13){
-                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
+                fprintf(errorout,"> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
                 return 0;
             }
             value = cropRangeFromValue(datawords.array[symbol->address.pvalue.value], from, to);
@@ -1012,11 +1069,11 @@ int identifyIDARSymbol(char* idarStr, Word* location){
             return 1;
         case ACTIONT:
             if(from<0&&from>=13){
-                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
+                fprintf(errorout,"> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,from);
                 return 0;
             }
             if(to<0&&to>=13){
-                printf("> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
+                fprintf(errorout,"> ERROR (LINE: %d): The value '%d' must be between 0 to 12 ",lineNumber,to);
                 return 0;
             }
             value = cropRangeFromValue(codewords.array[symbol->address.pvalue.value], from, to);
@@ -1033,7 +1090,7 @@ int checkSymbolSize() {
         /* code */
         symbols.size += 10;
         if ((symbols.array = realloc(symbols.array, sizeof(Symbol) * symbols.size)) == NULL) {
-            printf("> ERROR! not enogh space\n");
+            fprintf(errorout,"> ERROR! not enogh space\n");
             return 0;
         }
 
@@ -1042,7 +1099,7 @@ int checkSymbolSize() {
 }
 
 Word cropRangeFromValue(Word value, int startBit, int endBit){
-    /*TODO: Negative number.*/
+    /*Crop the range of bits and complete the MSB*/
     Word newValue = createInstanceOfWord();
     int mask = ~0;
     newValue.fullword.cell = value.fullword.cell;
@@ -1067,7 +1124,6 @@ void printSymbols(void) {
     int i;
     printf("----------------Symbols--------------\n");
     for (i = 0; symbols.numberOfSymbols > i; i++) {
-        int j;
         printf("The Symbol: '%s' has an address of: '%u' isExternal = '%d' Type: '%d' ", symbols.array[i].name,
                symbols.array[i].address.fullword.cell, symbols.array[i].isExternal, symbols.array[i].type);
         printf("\n");
@@ -1078,11 +1134,28 @@ void printSymbols(void) {
 void printArr() {
     printInstructionsArray(&codewords);
 }
+void externFile(){
+    externs = calloc((size_t)LINE_MAX*(symbols.numberOfSymbols),sizeof(char));
+}
+char* getExterns(){
+    if(strlen(externs)==0) {
+        free(externs);
+        return NULL;
+    }
+    return externs;
+}
+char* getEntrys(){
+    if(strlen(entrys)==0){
+        free(entrys);
+        return NULL;
+    }
+    return entrys;
+
+}
 char* convertToBase8(){
     char* translated = calloc(LINE_MAX*(codewords.numberOfWords+datawords.numberOfWords),sizeof(char));
     int arrayIndex = 0;
     int i = 0;
-    char base8[MAX_MEMORY];
     unsigned int address = 100;
     Word datalength = createInstanceOfWord();
     Word codelength = createInstanceOfWord();
@@ -1220,4 +1293,9 @@ int freeAll(){
     datawords.array = NULL;
     datawords.numberOfWords = 0;
     datawords.size = 0;
+    externs = NULL;
+    externsPtr = 0;
+    entrys = NULL;
+    externsPtr = 0;
+    return 1;
 }

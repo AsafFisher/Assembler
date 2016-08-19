@@ -1,6 +1,7 @@
 #ifndef STARTIF
 #define STARTIF
 #include <string.h>
+#include <stdio.h>
 
 typedef union Word{
 	/*Binary structure: 15 bits basic cell*/
@@ -56,15 +57,9 @@ enum{NOP = 0, ONEOP,TWOP};
 /*Action opcode*/
 /*      0    1  2   3   4  5   6   7   8   9   10  11  12  13  14  15*/
 enum{mov=0,cmp,add,sub,nt,clr,lea,inc,dec,jmp,bne,red,prn,jsr,rts,stop};
-Word createInstanceOfWordWithParam(Word word);
 Word createInstanceOfWord();
-Word createInstaceOfCommandWithParam(unsigned int pERA,unsigned int pdestar,unsigned int psrcar,unsigned int popcode,unsigned int pgrp);
 Word createInstaceOfCommand(unsigned int action);
-Word createInstaceOfParameterAdrressWithParam(unsigned int pERA, unsigned int param1, unsigned int param2);
-Word createInstaceOfParameterAdrress();
-Word createInstaceOfParameterValueWithParam(unsigned int pERA, unsigned int pvalue);
-Word createInstaceOfParameterValue();
-int setWordValue(Word *word, unsigned int value);
+int setWordValue(Word *word, unsigned int value, FILE *errorout);
 int checkSize(Words *words);
 void printInstructionsArray(Words *words);
 

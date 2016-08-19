@@ -8,10 +8,12 @@ int secondEntry(FILE* input);
 int main(int argc, const char * argv[]){
 	int i;
 	FILE *fi;
-    char *output;
-
 	for(i=1;i<argc;i++){
-		if(!(fi = (openFile(argv[i], ".as", "r")))){
+        char *output = NULL;
+        char *externout = NULL;
+        char *entryout = NULL;
+
+        if(!(fi = (openFile(argv[i], ".as", "r")))){
 			fprintf(stderr,"-------------------------FATAL-------------------------\n");
 			continue;
 		}
@@ -22,10 +24,33 @@ int main(int argc, const char * argv[]){
         printArr();
         printSymbols();
 		rewind(fi);
+        externFile();
         if(!secondEntry(fi)){
             continue;
         }
         fclose(fi);
+
+
+        if((entryout = getEntrys())!=NULL) {
+            if(!(fi = openFile(argv[i],".ent","w"))){
+                fprintf(stderr,"-------------------------FATAL-------------------------\n");
+                continue;
+            }
+            fprintf(fi, "%s", entryout);
+            fclose(fi);
+            free(entryout);
+        }
+
+
+        if((externout = getExterns())!=NULL) {
+            if(!(fi = openFile(argv[i],".ext","w"))){
+                fprintf(stderr,"-------------------------FATAL-------------------------\n");
+                continue;
+            }
+            fprintf(fi, "%s", externout);
+            fclose(fi);
+            free(externout);
+        }
 
         if(!(fi = openFile(argv[i],".ob","w"))){
             fprintf(stderr,"-------------------------FATAL-------------------------\n");
@@ -36,8 +61,6 @@ int main(int argc, const char * argv[]){
         fprintf(fi,"%s",output);
         fclose(fi);
         free(output);
-        output = NULL;
-        fi = NULL;
         freeAll();
 
 
@@ -51,6 +74,7 @@ int main(int argc, const char * argv[]){
 int secondEntry(FILE* file){
     if(!variableLinker(file)){
         printf("Assembler > ERROR Assembler throw exception!");
+        freeAll();
         return 0;
     }
     return 1;
@@ -61,7 +85,7 @@ int firstEntry(FILE* input){
 
 	char line[LINE_MAX];
 	while(fgets(line,LINE_MAX,input)!=NULL){
-		if(!parseLine(line,lineNumber)){
+		if(!parseLine(line,lineNumber,stderr)){
 			printf("Assembler > ERROR Assembler throw exception! (LINE: %d) \nabort file!\n",lineNumber);
 			ERRORS++;
 		}
@@ -70,6 +94,7 @@ int firstEntry(FILE* input){
 	}
     if(ERRORS>0){
         printf("FOUND '%d' ERRORS in code.",ERRORS);
+        freeAll();
         return 0;
     }
 	return 1;

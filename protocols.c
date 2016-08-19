@@ -1,29 +1,14 @@
 #include "protocols.h"
-#include <stdio.h>
 #include <stdlib.h>
 #define DUMMY 5
-Word createInstanceOfWordWithParam(Word word){
-	Word ref;
-	ref.fullword.cell = word.fullword.cell;
-	return ref;
-}
+
 Word createInstanceOfWord(){
 	Word ref;
 	ref.fullword.cell = 0;
 	return ref;
 
 }
-Word createInstaceOfCommandWithParam(unsigned int pERA,unsigned int pdestar,unsigned int psrcar,unsigned int popcode,unsigned int pgrp){
-	Word word;
-	/*101 b = 5*/
-	word.command.dumy = DUMMY;
-	word.command.ERA = pERA;
-	word.command.destar = pdestar;
-	word.command.srcar = psrcar;
-	word.command.opcode = popcode;
-	word.command.grp = pgrp;
-	return word;
-}
+
 Word createInstaceOfCommand(unsigned int action){
 	Word word;
 	switch (action) {
@@ -85,38 +70,14 @@ Word createInstaceOfCommand(unsigned int action){
 	return word;
 }
 
-Word createInstaceOfParameterAdrressWithParam(unsigned int pERA, unsigned int src, unsigned int dest){
-	Word word;
-	word.paddress.dumy = 0;
-	word.paddress.ERA = pERA;
-	word.paddress.src = src;
-	word.paddress.dest = dest;
-	return word;
-}
-Word createInstaceOfParameterAdrress(){
-	Word word;
-	word.paddress.dumy = 0;
-	return word;
-}
-Word createInstaceOfParameterValueWithParam(unsigned int pERA, unsigned int pvalue){
-	Word word;
-	word.pvalue.ERA = pERA;
-	word.pvalue.value = pvalue;
-	return word;
-}
-Word createInstaceOfParameterValue(){
-	Word word;
-	word.pvalue.value = 0;
-	return word;
-}
 
-int setWordValue(Word *word, unsigned int value){
+
+int setWordValue(Word *word, unsigned int value, FILE *errorout) {
 	if(value>((1<<16) - 1)&&(int)value>=0){
-		printf("Value: '%d' is too big.\n",value );
+		fprintf(errorout,"> ERROR: Value: '%d' is too big.\n",value );
 		return 0;
 	}
 	word->fullword.cell = value;
-    printf("TEST: %d\n",word->fullword.cell);
 	return 1;
 }
 
